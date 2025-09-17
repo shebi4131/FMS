@@ -1,0 +1,441 @@
+/* RecordDelete.css */
+.delete-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeInDelete 0.3s ease-out;
+}
+
+@keyframes fadeInDelete {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.delete-modal-container {
+  background: white;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+  animation: slideUpDelete 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+}
+
+@keyframes slideUpDelete {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.delete-modal-content {
+  padding: 40px 30px 30px 30px;
+  text-align: center;
+  position: relative;
+}
+
+/* Message Toast Styles */
+.message-toast {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  border-radius: 12px;
+  padding: 0;
+  z-index: 10;
+  animation: slideInMessage 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes slideInMessage {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.message-toast.success {
+  background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+  color: white;
+}
+
+.message-toast.error {
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+  color: white;
+}
+
+.message-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  position: relative;
+}
+
+.message-icon {
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.message-text {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  flex: 1;
+}
+
+.message-progress {
+  position: relative;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.3);
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  width: 100%;
+  transform: translateX(-100%);
+  animation: progressSlide 4s linear;
+}
+
+@keyframes progressSlide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Warning Icon */
+.warning-icon {
+  margin-bottom: 20px;
+  margin-top: 20px; /* Add space for toast */
+}
+
+.warning-icon svg {
+  color: #ff9800;
+  filter: drop-shadow(0 4px 8px rgba(255, 152, 0, 0.3));
+  animation: warningPulse 2s ease-in-out infinite;
+}
+
+@keyframes warningPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Title */
+.delete-title {
+  color: #d32f2f;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+  letter-spacing: -0.5px;
+}
+
+/* Description */
+.delete-description {
+  color: #666;
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0 0 25px 0;
+}
+
+/* Record Details */
+.record-details {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 0 0 25px 0;
+  border-left: 4px solid #2e7d32;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.detail-item:last-child {
+  margin-bottom: 0;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #2e7d32;
+  font-size: 0.9rem;
+}
+
+.detail-value {
+  font-weight: 500;
+  color: #333;
+  background: white;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  border: 1px solid #e0e0e0;
+}
+
+/* Confirmation Section */
+.confirmation-section {
+  margin-bottom: 30px;
+  text-align: left;
+}
+
+.confirm-label {
+  display: block;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.confirm-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+  background: #fafafa;
+}
+
+.confirm-input:focus {
+  outline: none;
+  border-color: #d32f2f;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
+}
+
+.confirm-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #f0f0f0;
+}
+
+.confirm-input::placeholder {
+  color: #bbb;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* Action Buttons */
+.delete-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.btn-cancel,
+.btn-delete {
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  min-width: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-cancel {
+  background: #f5f5f5;
+  color: #666;
+  border: 2px solid #e0e0e0;
+}
+
+.btn-cancel:hover:not(:disabled) {
+  background: #eeeeee;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-delete {
+  background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+  color: white;
+}
+
+.btn-delete:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(211, 47, 47, 0.4);
+}
+
+.btn-delete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.loading-content,
+.delete-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spinner {
+  animation: spinDelete 0.75s linear infinite;
+}
+
+@keyframes spinDelete {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Close Button */
+.close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+.close-btn:hover:not(:disabled) {
+  background: #f5f5f5;
+  color: #333;
+  transform: scale(1.1);
+}
+
+.close-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Enhanced Error Handling Styles */
+.btn-delete.error-state {
+  animation: errorShake 0.5s ease-in-out;
+}
+
+@keyframes errorShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* Success State Animation */
+.delete-modal-container.success-state {
+  animation: successPulse 0.6s ease-in-out;
+}
+
+@keyframes successPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .delete-modal-container {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .delete-modal-content {
+    padding: 30px 20px 20px 20px;
+  }
+  
+  .message-toast {
+    left: 15px;
+    right: 15px;
+    top: 15px;
+  }
+  
+  .message-content {
+    padding: 14px 16px;
+  }
+  
+  .message-text {
+    font-size: 13px;
+  }
+  
+  .delete-title {
+    font-size: 1.5rem;
+  }
+  
+  .delete-actions {
+    flex-direction: column;
+  }
+  
+  .btn-cancel,
+  .btn-delete {
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .record-details {
+    padding: 16px;
+  }
+  
+  .detail-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .detail-value {
+    align-self: stretch;
+    text-align: center;
+  }
+}
