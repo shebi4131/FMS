@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { FaUserCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import "./Navbar.css";
+import { hasRole } from "../lib/auth";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -31,6 +32,11 @@ export default function Navbar() {
     navigate("/login");
   };
 
+  const handleUserManagement = () => {
+    setOpen(false);
+    navigate("/usermanagement");
+  }
+
   const handleProfile = () => {
     setOpen(false);
     navigate("/profile");
@@ -59,6 +65,11 @@ export default function Navbar() {
           <FaUserCircle className="profile-icon" />
           {open && (
             <div className="dropdown-menu">
+              {hasRole('Admin') ?
+              <button className="dropdown-item" onClick={handleUserManagement}>
+                User Management
+              </button>
+              : null}
               <button className="dropdown-item" onClick={handleProfile}>
                 Profile
               </button>

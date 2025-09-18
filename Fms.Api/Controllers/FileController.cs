@@ -45,7 +45,6 @@ public class FileController : ControllerBase
     }
 
     [HttpDelete("delete/{id}")]
-    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteAsync(int id)
     {
         var success = await _fileService.DeleteFileAsync(id);

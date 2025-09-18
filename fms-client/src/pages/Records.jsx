@@ -6,6 +6,7 @@ import { api } from "../lib/api";
 import RecordEdit from "./RecordEdit";
 import RecordDelete from "./RecordDelete";
 import { hasRole } from "../lib/auth.JS";
+import RecordsPDFExport from "./RecordsPDFExport";
 
 export default function Records() {
   const navigate = useNavigate();
@@ -13,10 +14,7 @@ export default function Records() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
-
-  const handleAddNew = () => {
-    navigate("/home");
-  };
+  const [pdfExportModal, setPdfExportModal] = useState(false);
 
   // Modal states
   const [editModal, setEditModal] = useState({ isOpen: false, record: null });
@@ -37,9 +35,21 @@ export default function Records() {
 
   const [filteredData, setFilteredData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 25;
 
-  // Fetch data from API
+  const handleAddNew = () => {
+    navigate("/home");
+  };
+
+  const handleExportPDF = () => {
+    setPdfExportModal(true);
+  };
+
+  const handleClosePDFExport = () => {
+    setPdfExportModal(false);
+  };
+
+  // Fetch data from API  
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -180,24 +190,32 @@ export default function Records() {
   // Loading state
   if (loading) {
     return (
-      <div className="records-container">
+      <div className="dashboard-page">
         <Navbar />
-        <div className="records-card">
-          <div className="card-header">
-            <div className="header-content">
-              <div className="header-text">
-                <h1 className="system-title">File Management System</h1>
-                <h2 className="page-title">Files Record Management</h2>
-              </div>
+        <div className="dashboard-header">
+          <div className="header-content">
+            <div className="header-text">
+              <h1 className="system-title">File Management System</h1>
+              <h2 className="page-title">Files Record Management</h2>
+            </div>
+            <div className="header-buttons">
               <button className="add-file-btn" onClick={handleAddNew}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
                 </svg>
                 Add File
               </button>
+              <button className="export-pdf-btn" onClick={handleExportPDF}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                </svg>
+                Export PDF
+              </button>
             </div>
           </div>
-          <div className="loading-container" style={{ textAlign: 'center', padding: '50px' }}>
+        </div>
+        <div className="dashboard-content">
+          <div className="loading-container">
             <p>Loading records...</p>
           </div>
         </div>
@@ -208,28 +226,36 @@ export default function Records() {
   // Error state
   if (error) {
     return (
-      <div className="records-container">
+      <div className="dashboard-page">
         <Navbar />
-        <div className="records-card">
-          <div className="card-header">
-            <div className="header-content">
-              <div className="header-text">
-                <h1 className="system-title">File Management System</h1>
-                <h2 className="page-title">Files Record Management</h2>
-              </div>
+        <div className="dashboard-header">
+          <div className="header-content">
+            <div className="header-text">
+              <h1 className="system-title">File Management System</h1>
+              <h2 className="page-title">Files Record Management</h2>
+            </div>
+            <div className="header-buttons">
               <button className="add-file-btn" onClick={handleAddNew}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
                 </svg>
                 Add File
               </button>
+              <button className="export-pdf-btn" onClick={handleExportPDF}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                </svg>
+                Export PDF
+              </button>
             </div>
           </div>
-          <div className="error-container" style={{ textAlign: 'center', padding: '50px', color: 'red' }}>
+        </div>
+        <div className="dashboard-content">
+          <div className="error-container">
             <p>Error loading records: {error}</p>
             <button 
               onClick={() => window.location.reload()} 
-              style={{ marginTop: '10px', padding: '8px 16px', cursor: 'pointer' }}
+              className="retry-btn"
             >
               Retry
             </button>
@@ -240,29 +266,36 @@ export default function Records() {
   }
 
   return (
-    <div className="records-container">
+    <div className="dashboard-page">
       <Navbar />
-      <div className="records-card">
-        <div className="card-header">
-          <div className="header-content">
-            <div className="header-text">
-              <h1 className="system-title">File Management System</h1>
-              <h2 className="page-title">Files Record Management</h2>
-            </div>
+      <div className="dashboard-header">
+        <div className="header-content">
+          <div className="header-text">
+            <h1 className="system-title">FMS</h1>
+            {/* <h2 className="page-title">Files Record Management</h2> */}
+          </div>
+          <div className="header-buttons">
             <button className="add-file-btn" onClick={handleAddNew}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
               </svg>
               Add File
             </button>
+            <button className="export-pdf-btn" onClick={handleExportPDF}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+              </svg>
+              Export PDF
+            </button>
           </div>
         </div>
+      </div>
       
+      <div className="dashboard-content">
         <div className="table-container">
           <table className="records-table">
             <thead>
               <tr className="header-row">
-                <th>#</th>
                 <th>Plot No</th>
                 <th>Street No</th>
                 <th>Phase</th>
@@ -277,11 +310,6 @@ export default function Records() {
               </tr>
               
               <tr className="filter-row">
-                <td className="filter-cell">
-                  <button className="clear-filters" onClick={handleReset} title="Clear All Filters">
-                    ✕
-                  </button>
-                </td>
                 <td className="filter-cell">
                   <input 
                     type="text" 
@@ -303,7 +331,7 @@ export default function Records() {
                     value={filters.phase} 
                     onChange={(e) => setFilters({ ...filters, phase: e.target.value })}
                   >
-                    <option value="">Select</option>
+                    <option value=""></option>
                     <option value="JG-I">JG-I</option>
                     <option value="JG-II">JG-II</option>
                     <option value="KT">KT</option>
@@ -335,12 +363,19 @@ export default function Records() {
                   />
                 </td>
                 <td className="filter-cell">
-                  <input 
-                    type="text" 
-                    placeholder="Purpose" 
+                   <select 
                     value={filters.purpose} 
-                    onChange={(e) => setFilters({ ...filters, purpose: e.target.value })} 
-                  />
+                    onChange={(e) => setFilters({ ...filters, purpose: e.target.value })}
+                  >
+                    <option value=""></option>
+                    <option value="ndc">NDC</option>
+                      <option value="transfer">Transfer</option>
+                      <option value="demarcation">Demarcation</option>
+                      <option value="legal">Legal</option>
+                      <option value="accounts">Accounts</option>
+                      <option value="review">Review</option>
+                      <option value="other">Other</option>
+                  </select>
                 </td>
                 <td className="filter-cell">
                   <input 
@@ -362,12 +397,16 @@ export default function Records() {
                     value={filters.status} 
                     onChange={(e) => setFilters({ ...filters, status: e.target.value })}
                   >
-                    <option value="">Status</option>
+                    <option value=""></option>
                     <option value="In">In</option>
                     <option value="Out">Out</option>
                   </select>
                 </td>
-                
+                <td className="filter-cell">
+                  <button className="clear-filters" onClick={handleReset} title="Clear All Filters">
+                    ✕
+                  </button>
+                </td>
               </tr>
             </thead>
 
@@ -375,66 +414,69 @@ export default function Records() {
               {currentData.length > 0 ? (
                 currentData.map((row, index) => (
                   <tr key={row.id} className="data-row">
-                    <td>{startIndex + index + 1}</td>
-                    <td><span className="plot-number">{row.plotNo}</span></td>
+                    <td>{row.plotNo}</td>
                     <td>{row.stNo}</td>
-                    <td><span className={`phase-badge phase-${row.phase.toLowerCase().replace('-', '')}`}>{row.phase}</span></td>
+                    <td>{row.phase}</td>
                     <td>{row.from}</td>
                     <td>{row.carrier}</td>
                     <td>{row.to}</td>
                     <td>{row.purpose}</td>
                     <td>{new Date(row.date).toLocaleString('en-US', {
-  year: 'numeric',
-  month: 'short',
-  day: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit'
-})}</td>
-                    <td><span className="remarks-text">{row.remarks}</span></td>
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}</td>
+                    <td>{row.remarks}</td>
                     <td>
                       <span className={`status-badge status-${row.status.toLowerCase()}`}>
                         {row.status}
                       </span>
                     </td>
-                      {hasRole('Admin') || hasRole('Manager') ?
-                    <td className="action-cell">
-                      <div className="action-dropdown">
-                        <button 
-                          className="action-trigger"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleDropdown(row.id);
-                          }}
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M7 10l5 5 5-5z"/>
-                          </svg>
-                        </button>
-                        {activeDropdown === row.id && (
-                          <div className="action-menu">
-                            <button 
-                              className="action-item edit-btn"
-                              onClick={() => handleEdit(row)}
-                            >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                              </svg>
-                              Edit
-                            </button>
-                            <button 
-                              className="action-item delete-btn"
-                              onClick={() => handleDelete(row)}
-                            >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                              </svg>
-                              Delete
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    : null}
+                     
+                    {(hasRole('Admin') || hasRole('Manager')) && (
+                      <td className="action-cell">
+                        <div className="action-dropdown">
+                          <button 
+                            className="action-trigger"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleDropdown(row.id);
+                            }}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M7 10l5 5 5-5z"/>
+                            </svg>
+                          </button>
+                          {activeDropdown === row.id && (
+                            <div className="action-menu">
+                              <button 
+                                className="action-item edit-btn"
+                                onClick={() => handleEdit(row)}
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
+                                Edit
+                              </button>
+                               {hasRole('Admin') && (
+                                <button 
+                                  className="action-item delete-btn"
+                                  onClick={() => handleDelete(row)}
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                                  </svg>
+                                  Delete
+                                </button>
+                               )}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    )}
+                   
                   </tr>
                 ))
               ) : (
@@ -500,6 +542,12 @@ export default function Records() {
         isOpen={deleteModal.isOpen}
         onClose={handleCloseDelete}
         onDelete={handleDeleteConfirm}
+      />
+
+      <RecordsPDFExport
+        isOpen={pdfExportModal}
+        onClose={handleClosePDFExport}
+        filters={filters}
       />
     </div>
   );

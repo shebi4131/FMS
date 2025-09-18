@@ -75,7 +75,7 @@ public class AuthController : ControllerBase
         }
 
         var now = DateTime.UtcNow;
-        var expireHours = jwtSettings["ExpireHours"] != null ? Convert.ToDouble(jwtSettings["ExpireHours"]) : 24; // Default to 24 hours
+        var expireHours = jwtSettings["ExpireHours"] != null ? Convert.ToDouble(jwtSettings["ExpireHours"]) : 2; // Default to 2 hours
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {

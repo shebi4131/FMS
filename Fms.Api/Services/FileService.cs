@@ -26,6 +26,11 @@ public class FileService : IFileService
         if (string.IsNullOrEmpty(fileDto.Status))
             fileDto.Status = "In"; // Default status
 
+        if (fileDto.Date > DateTime.Now.Date)
+        {
+            throw new ArgumentException("File date cannot be in the future.");
+        }
+
         // Delegate to repository for data persistence
         return await _files.CreateFileAsync(fileDto);
     }
@@ -62,6 +67,11 @@ public class FileService : IFileService
         var existingFile = await _files.GetFileByIdAsync(id);
         if (existingFile == null)
             return null;
+
+        if (fileDto.Date > DateTime.Now.Date)
+        {
+            throw new ArgumentException("File date cannot be in the future.");
+        }
 
         // Business Logic: Preserve creation audit fields
         var originalCreatedAt = existingFile.CreatedAt;

@@ -5,7 +5,6 @@ import "./Home.css";
 import { useNavigate } from "react-router-dom";
 
 export default function Home() {
-
   const navigate = useNavigate();
   const [form, setForm] = useState({
     plotNo: "",
@@ -23,8 +22,7 @@ export default function Home() {
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
 
-
-    const handleChange = (e) => {
+  const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -34,8 +32,8 @@ export default function Home() {
     setMessage(null);
 
     try {
-      await api.post('file/create', form);
-      setMessage('File entered successfully!');
+      await api.post("file/create", form);
+      setMessage("File entered successfully!");
       setForm({
         plotNo: "",
         stNo: "",
@@ -49,11 +47,9 @@ export default function Home() {
         remarks: ""
       });
 
-      // Redirect to records page after successful submission
-      navigate('/records');
-    }
-    catch (error) {
-      setMessage(JSON.stringify(error.response?.data) || 'File entrance failed');
+      navigate("/records");
+    } catch (error) {
+      setMessage(JSON.stringify(error.response?.data) || "File entrance failed");
     } finally {
       setLoading(false);
     }
@@ -64,26 +60,32 @@ export default function Home() {
       <Navbar />
       <div className="home-body">
         <div className="home-content">
-
-          {/* Form Card */}
           <div className="card form-card">
             <div className="card-header">
-  <div className="header-content">
-    <div className="header-text">
-      <h2 className="card-title">
-        <span className="title-icon">📁</span>
-        File Entry Form
-      </h2>
-      <p className="card-subtitle">Enter file tracking information</p>
-    </div>
-    <button className="view-records-btn" onClick={() => navigate("/records")}>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
-      </svg>
-      View Records
-    </button>
-  </div>
-</div>
+              <div className="header-content">
+                <div className="header-text">
+                  <h2 className="card-title">
+                    <span className="title-icon">📁</span>
+                    File Entry Form
+                  </h2>
+                  <p className="card-subtitle">Enter file tracking information</p>
+                </div>
+                <button
+                  className="view-records-btn"
+                  onClick={() => navigate("/records")}
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
+                  </svg>
+                  View Records
+                </button>
+              </div>
+            </div>
 
             <form className="filein-form" onSubmit={handleSubmit}>
               {/* Property Information */}
@@ -91,30 +93,36 @@ export default function Home() {
                 <h3 className="section-title">Property Information</h3>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Plot No <span className="required">*</span></label>
-                    <input 
-                      type="text" 
+                    <label>
+                      Plot No <span className="required">*</span>
+                    </label>
+                    <input
+                      type="text"
                       name="plotNo"
                       value={form.plotNo}
                       onChange={handleChange}
-                      placeholder="Enter plot number" 
+                      placeholder="Enter plot number"
                       required
                     />
                   </div>
                   <div className="form-group">
-                    <label>Street No <span className="required">*</span></label>
-                    <input 
-                      type="text" 
+                    <label>
+                      Street No <span className="required">*</span>
+                    </label>
+                    <input
+                      type="text"
                       name="stNo"
                       value={form.stNo}
                       onChange={handleChange}
-                      placeholder="Enter street number" 
+                      placeholder="Enter street number"
                       required
                     />
                   </div>
                   <div className="form-group">
-                    <label>Phase <span className="required">*</span></label>
-                    <select 
+                    <label>
+                      Phase <span className="required">*</span>
+                    </label>
+                    <select
                       name="phase"
                       value={form.phase}
                       onChange={handleChange}
@@ -135,34 +143,38 @@ export default function Home() {
                 <h3 className="section-title">File Movement Information</h3>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>From <span className="required">*</span></label>
-                    <input 
-                      type="text" 
+                    <label>
+                      From <span className="required">*</span>
+                    </label>
+                    <input
+                      type="text"
                       name="from"
                       value={form.from}
                       onChange={handleChange}
-                      placeholder="Enter sender name" 
+                      placeholder="Enter sender name"
                       required
                     />
                   </div>
                   <div className="form-group">
                     <label>Carrier</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       name="carrier"
                       value={form.carrier}
                       onChange={handleChange}
-                      placeholder="Enter carrier name" 
+                      placeholder="Enter carrier name"
                     />
                   </div>
                   <div className="form-group">
-                    <label>To <span className="required">*</span></label>
-                    <input 
-                      type="text" 
+                    <label>
+                      To <span className="required">*</span>
+                    </label>
+                    <input
+                      type="text"
                       name="to"
                       value={form.to}
                       onChange={handleChange}
-                      placeholder="Enter receiver name" 
+                      placeholder="Enter receiver name"
                       required
                     />
                   </div>
@@ -174,8 +186,10 @@ export default function Home() {
                 <h3 className="section-title">Purpose & Status</h3>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Purpose <span className="required">*</span></label>
-                    <select 
+                    <label>
+                      Purpose <span className="required">*</span>
+                    </label>
+                    <select
                       name="purpose"
                       value={form.purpose}
                       onChange={handleChange}
@@ -192,18 +206,23 @@ export default function Home() {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label>Date <span className="required">*</span></label>
-                    <input 
-                      type="date" 
+                    <label>
+                      Date <span className="required">*</span>
+                    </label>
+                    <input
+                      type="date"
                       name="date"
                       value={form.date}
                       onChange={handleChange}
+                      max={new Date().toISOString().split("T")[0]}
                       required
                     />
                   </div>
                   <div className="form-group">
-                    <label>Status <span className="required">*</span></label>
-                    <select 
+                    <label>
+                      Status <span className="required">*</span>
+                    </label>
+                    <select
                       name="status"
                       value={form.status}
                       onChange={handleChange}
@@ -222,11 +241,11 @@ export default function Home() {
                 <div className="form-row full-width">
                   <div className="form-group full-width">
                     <label>Remarks</label>
-                    <textarea 
+                    <textarea
                       name="remarks"
                       value={form.remarks}
                       onChange={handleChange}
-                      rows="4" 
+                      rows="4"
                       placeholder="Enter any additional remarks or notes"
                     ></textarea>
                   </div>
@@ -235,10 +254,11 @@ export default function Home() {
 
               <div className="form-actions">
                 <button type="button" className="cancel-btn">
-                  Cancel</button>
+                  Cancel
+                </button>
                 <button type="submit" disabled={loading} className="submit-btn">
                   <span className="btn-icon">💾</span>
-                  {loading ? 'Entering...' : 'Save Files'}
+                  {loading ? "Entering..." : "Save Files"}
                 </button>
               </div>
               {message && <p className="message">{message}</p>}
