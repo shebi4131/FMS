@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Records.css";
 import Navbar from "../components/Navbar";
@@ -15,6 +15,16 @@ export default function Records() {
   const [error, setError] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [pdfExportModal, setPdfExportModal] = useState(false);
+
+  // Summary data state
+  const [summaryData, setSummaryData] = useState({
+    totalFiles: 0,
+    filesIn: 0,
+    filesOut: 0,
+    todaysFiles: 0,
+    recentFiles: 0
+  });
+  const [summaryLoading, setSummaryLoading] = useState(true);
 
   // Modal states
   const [editModal, setEditModal] = useState({ isOpen: false, record: null });
@@ -33,8 +43,9 @@ export default function Records() {
     remarks: ""
   });
 
-  const [filteredData, setFilteredData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
   const itemsPerPage = 25;
 
   const handleAddNew = () => {
@@ -49,46 +60,93 @@ export default function Records() {
     setPdfExportModal(false);
   };
 
-  // Fetch data from API  
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get("/file/all");
-        setData(response.data);
-        setError(null);
-      } catch (err) {
-        setError(err.message);
-        console.error("Error fetching data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+  // Fetch summary data
+  const fetchSummaryData = useCallback(async () => {
+    try {
+      setSummaryLoading(true);
+      const response = await api.get("/file/summary");
+      setSummaryData(response.data);
+    } catch (err) {
+      console.error("Error fetching summary data:", err);
+    } finally {
+      setSummaryLoading(false);
+    }
   }, []);
 
-  // Filter data based on filters
+  // Fetch filtered data from backend
+  const fetchFilteredData = useCallback(async (page = 1, currentFilters = filters) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Prepare query parameters
+      const queryParams = new URLSearchParams();
+      queryParams.append('page', page);
+      queryParams.append('limit', itemsPerPage);
+      
+      // Add filters to query params - only add non-empty values
+      Object.entries(currentFilters).forEach(([key, value]) => {
+        if (value && value.toString().trim() !== '') {
+          queryParams.append(key, value.toString().trim());
+        }
+      });
+
+      const response = await api.get(`/file/filtered?${queryParams.toString()}`);
+      
+      if (response.data) {
+        setData(response.data.data || []);
+        const totalCount = response.data.totalCount || 0;
+        setTotalRecords(totalCount);
+        setTotalPages(Math.ceil(totalCount / itemsPerPage));
+      } else {
+        setData([]);
+        setTotalRecords(0);
+        setTotalPages(1);
+      }
+      
+    } catch (err) {
+      setError(err.message || 'Error fetching data');
+      console.error("Error fetching filtered data:", err);
+      setData([]);
+      setTotalRecords(0);
+      setTotalPages(1);
+    } finally {
+      setLoading(false);
+    }
+  }, [filters, itemsPerPage]);
+
+  // Debounced filter function
+  const debouncedFetchData = useCallback((newFilters) => {
+    const timeoutId = setTimeout(() => {
+      setCurrentPage(1);
+      fetchFilteredData(1, newFilters);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [fetchFilteredData]);
+
+  // Initial data fetch
   useEffect(() => {
-    const filtered = data.filter((row) =>
-      (filters.plotNo ? row.plotNo.toLowerCase().includes(filters.plotNo.toLowerCase()) : true) &&
-      (filters.stNo ? row.stNo.toLowerCase().includes(filters.stNo.toLowerCase()) : true) &&
-      (filters.phase ? row.phase.toLowerCase().includes(filters.phase.toLowerCase()) : true) &&
-      (filters.from ? row.from.toLowerCase().includes(filters.from.toLowerCase()) : true) &&
-      (filters.carrier ? row.carrier.toLowerCase().includes(filters.carrier.toLowerCase()) : true) &&
-      (filters.to ? row.to.toLowerCase().includes(filters.to.toLowerCase()) : true) &&
-      (filters.purpose ? row.purpose.toLowerCase().includes(filters.purpose.toLowerCase()) : true) &&
-      (filters.date ? row.date.includes(filters.date) : true) &&
-      (filters.status ? row.status.toLowerCase().includes(filters.status.toLowerCase()) : true) &&
-      (filters.remarks ? row.remarks.toLowerCase().includes(filters.remarks.toLowerCase()) : true)
-    );
-    
-    setFilteredData(filtered);
-    setCurrentPage(1);
-  }, [filters, data]);
+    fetchSummaryData();
+    fetchFilteredData(1);
+  }, [fetchSummaryData, fetchFilteredData]);
+
+  // Handle filter changes with debouncing
+  useEffect(() => {
+    const cleanup = debouncedFetchData(filters);
+    return cleanup;
+  }, [filters, debouncedFetchData]);
+
+  // Handle page changes
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      setCurrentPage(page);
+      fetchFilteredData(page, filters);
+    }
+  };
 
   const handleReset = () => {
-    setFilters({
+    const resetFilters = {
       plotNo: "",
       stNo: "",
       phase: "",
@@ -99,7 +157,9 @@ export default function Records() {
       date: "",
       status: "",
       remarks: ""
-    });
+    };
+    setFilters(resetFilters);
+    setCurrentPage(1);
   };
 
   // Modal handlers
@@ -114,19 +174,33 @@ export default function Records() {
   };
 
   const handleEditUpdate = (updatedRecord) => {
-    // Update the record in the data array
+    // Update the record in the current data
     setData(prevData => 
       prevData.map(item => 
         item.id === updatedRecord.id ? updatedRecord : item
       )
     );
     setEditModal({ isOpen: false, record: null });
+    // Refresh summary data
+    fetchSummaryData();
   };
 
   const handleDeleteConfirm = (recordId) => {
-    // Remove the record from the data array
+    // Remove the record from current data
     setData(prevData => prevData.filter(item => item.id !== recordId));
     setDeleteModal({ isOpen: false, record: null });
+    
+    // If the current page becomes empty and it's not the first page, go to previous page
+    if (data.length === 1 && currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+      fetchFilteredData(currentPage - 1, filters);
+    } else {
+      // Otherwise, refetch current page data to get accurate count
+      fetchFilteredData(currentPage, filters);
+    }
+    
+    // Refresh summary data
+    fetchSummaryData();
   };
 
   const handleCloseEdit = () => {
@@ -149,18 +223,6 @@ export default function Records() {
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
-
-  // Pagination logic
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentData = filteredData.slice(startIndex, endIndex);
-
-  const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
 
   const renderPaginationButtons = () => {
     const buttons = [];
@@ -187,8 +249,83 @@ export default function Records() {
     return buttons;
   };
 
-  // Loading state
-  if (loading) {
+  // Summary Cards Component
+  const SummaryCards = () => (
+    <div className="summary-cards">
+      <div className="summary-card">
+        <div className="card-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+          </svg>
+        </div>
+        <div className="card-content">
+          <h3>Total Files</h3>
+          <span className="card-number">
+            {summaryLoading ? "..." : summaryData.totalFiles.toLocaleString()}
+          </span>
+        </div>
+      </div>
+
+      <div className="summary-card">
+        <div className="card-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/>
+          </svg>
+        </div>
+        <div className="card-content">
+          <h3>Files In</h3>
+          <span className="card-number">
+            {summaryLoading ? "..." : summaryData.filesIn.toLocaleString()}
+          </span>
+        </div>
+      </div>
+
+      <div className="summary-card">
+        <div className="card-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19,13H5V11H19V13Z"/>
+          </svg>
+        </div>
+        <div className="card-content">
+          <h3>Files Out</h3>
+          <span className="card-number">
+            {summaryLoading ? "..." : summaryData.filesOut.toLocaleString()}
+          </span>
+        </div>
+      </div>
+
+      <div className="summary-card">
+        <div className="card-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M16.2,16.2L11,13V7H12.5V12.2L17,14.9L16.2,16.2Z"/>
+          </svg>
+        </div>
+        <div className="card-content">
+          <h3>Today's Files</h3>
+          <span className="card-number">
+            {summaryLoading ? "..." : summaryData.todaysFiles.toLocaleString()}
+          </span>
+        </div>
+      </div>
+
+      <div className="summary-card">
+        <div className="card-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M13,9H18.5L13,3.5V9M6,2H14L20,8V20A2,2 0 0,1 18,22H6C4.89,22 4,21.1 4,20V4C4,2.89 4.89,2 6,2M15,18V16H6V18H15M18,14V12H6V14H18Z"/>
+          </svg>
+        </div>
+        <div className="card-content">
+          <h3>Recent Files</h3>
+          <span className="card-number">
+            {summaryLoading ? "..." : summaryData.recentFiles.toLocaleString()}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Loading state for initial load
+  if (loading && data.length === 0) {
     return (
       <div className="dashboard-page">
         <Navbar />
@@ -215,6 +352,7 @@ export default function Records() {
           </div>
         </div>
         <div className="dashboard-content">
+          <SummaryCards />
           <div className="loading-container">
             <p>Loading records...</p>
           </div>
@@ -223,8 +361,8 @@ export default function Records() {
     );
   }
 
-  // Error state
-  if (error) {
+  // Error state for initial load
+  if (error && data.length === 0) {
     return (
       <div className="dashboard-page">
         <Navbar />
@@ -251,10 +389,11 @@ export default function Records() {
           </div>
         </div>
         <div className="dashboard-content">
+          <SummaryCards />
           <div className="error-container">
             <p>Error loading records: {error}</p>
             <button 
-              onClick={() => window.location.reload()} 
+              onClick={() => fetchFilteredData(currentPage, filters)} 
               className="retry-btn"
             >
               Retry
@@ -271,8 +410,7 @@ export default function Records() {
       <div className="dashboard-header">
         <div className="header-content">
           <div className="header-text">
-            <h1 className="system-title">FMS</h1>
-            {/* <h2 className="page-title">Files Record Management</h2> */}
+            <h1 className="system-title">FECHS - File Management System</h1>
           </div>
           <div className="header-buttons">
             <button className="add-file-btn" onClick={handleAddNew}>
@@ -287,11 +425,13 @@ export default function Records() {
               </svg>
               Export PDF
             </button>
-          </div>
+            </div>
         </div>
       </div>
       
       <div className="dashboard-content">
+        <SummaryCards />
+        
         <div className="table-container">
           <table className="records-table">
             <thead>
@@ -306,7 +446,7 @@ export default function Records() {
                 <th>Date</th>
                 <th>Remarks</th>
                 <th>Status</th>
-                {hasRole('Admin') || hasRole('Manager') ? <th>Action</th> : null}
+                <th>Action</th>
               </tr>
               
               <tr className="filter-row">
@@ -369,12 +509,12 @@ export default function Records() {
                   >
                     <option value=""></option>
                     <option value="ndc">NDC</option>
-                      <option value="transfer">Transfer</option>
-                      <option value="demarcation">Demarcation</option>
-                      <option value="legal">Legal</option>
-                      <option value="accounts">Accounts</option>
-                      <option value="review">Review</option>
-                      <option value="other">Other</option>
+                    <option value="transfer">Transfer</option>
+                    <option value="demarcation">Demarcation</option>
+                    <option value="legal">Legal</option>
+                    <option value="accounts">Accounts</option>
+                    <option value="review">Review</option>
+                    <option value="other">Other</option>
                   </select>
                 </td>
                 <td className="filter-cell">
@@ -411,8 +551,8 @@ export default function Records() {
             </thead>
 
             <tbody>
-              {currentData.length > 0 ? (
-                currentData.map((row, index) => (
+              {data.length > 0 ? (
+                data.map((row, index) => (
                   <tr key={row.id} className="data-row">
                     <td>{row.plotNo}</td>
                     <td>{row.stNo}</td>
@@ -421,67 +561,70 @@ export default function Records() {
                     <td>{row.carrier}</td>
                     <td>{row.to}</td>
                     <td>{row.purpose}</td>
-                    <td>{new Date(row.date).toLocaleString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}</td>
+                    <td>
+  {new Date(row.date).toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })}{" "} 
+  {`(${new Date(row.createdAt).toLocaleString('en-US', {
+  hour: 'numeric',
+  minute: '2-digit',
+  hour12: true
+})})`}
+
+</td>
+
                     <td>{row.remarks}</td>
                     <td>
                       <span className={`status-badge status-${row.status.toLowerCase()}`}>
                         {row.status}
                       </span>
                     </td>
-                     
-                    {(hasRole('Admin') || hasRole('Manager')) && (
-                      <td className="action-cell">
-                        <div className="action-dropdown">
-                          <button 
-                            className="action-trigger"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleDropdown(row.id);
-                            }}
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M7 10l5 5 5-5z"/>
-                            </svg>
-                          </button>
-                          {activeDropdown === row.id && (
-                            <div className="action-menu">
+                    <td className="action-cell">
+                      <div className="action-dropdown">
+                        <button 
+                          className="action-trigger"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleDropdown(row.id);
+                          }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M7 10l5 5 5-5z"/>
+                          </svg>
+                        </button>
+                        {activeDropdown === row.id && (
+                          <div className="action-menu">
+                            <button 
+                              className="action-item edit-btn"
+                              onClick={() => handleEdit(row)}
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                              </svg>
+                              Edit
+                            </button>
+                            {hasRole('Admin') && (
                               <button 
-                                className="action-item edit-btn"
-                                onClick={() => handleEdit(row)}
+                                className="action-item delete-btn"
+                                onClick={() => handleDelete(row)}
                               >
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                  <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
                                 </svg>
-                                Edit
+                                Delete
                               </button>
-                               {hasRole('Admin') && (
-                                <button 
-                                  className="action-item delete-btn"
-                                  onClick={() => handleDelete(row)}
-                                >
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                                  </svg>
-                                  Delete
-                                </button>
-                               )}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                    )}
-                   
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="12" className="no-data">
+                  <td colSpan="11" className="no-data">
                     <div className="no-data-message">
                       <span>📋</span>
                       <p>No matching records found</p>
@@ -491,18 +634,20 @@ export default function Records() {
               )}
             </tbody>
           </table>
+          
+          {loading && (
+            <div className="table-loading">
+              <p>Loading...</p>
+            </div>
+          )}
         </div>
 
         <div className="table-footer">
           <div className="records-info">
             <span className="total-count">
-              Showing {currentData.length} of {filteredData.length} records
+              Showing {data.length} of {totalRecords} records 
+              {totalPages > 0 && ` (Page ${currentPage} of ${totalPages})`}
             </span>
-            {filteredData.length !== data.length && (
-              <span className="filter-info">
-                (filtered from {data.length} total records)
-              </span>
-            )}
           </div>
           
           {totalPages > 1 && (
@@ -510,7 +655,7 @@ export default function Records() {
               <button 
                 className="nav-btn" 
                 onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
+                disabled={currentPage === 1 || loading}
               >
                 ‹ Prev
               </button>
@@ -520,7 +665,7 @@ export default function Records() {
               <button 
                 className="nav-btn" 
                 onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
+                disabled={currentPage === totalPages || loading}
               >
                 Next ›
               </button>

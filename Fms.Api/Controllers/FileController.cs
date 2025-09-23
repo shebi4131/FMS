@@ -52,4 +52,27 @@ public class FileController : ControllerBase
             return NotFound();
         return NoContent();
     }
+
+    [HttpGet("filtered")]
+    public async Task<ActionResult> GetFilteredFilesAsync(
+     [FromQuery] FileFilterDto filterDto,
+     CancellationToken cancellationToken = default)
+    {
+        var result = await _fileService.GetFilteredFilesAsync(filterDto, cancellationToken);
+
+        return Ok(new
+        {
+            Data = result.Files,
+            TotalCount = result.TotalCount,
+            page = filterDto.Page,
+            limit = filterDto.Limit
+        });
+    }
+
+    [HttpGet("summary")]
+    public async Task<IActionResult> GetFileSummaryAsync()
+    {
+        var summary = await _fileService.GetFileSummaryAsync();
+        return Ok(summary);
+    }
 }

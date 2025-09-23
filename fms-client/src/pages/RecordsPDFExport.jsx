@@ -6,6 +6,7 @@ import "./RecordsPDFExport.css";
 
 const RecordsPDFExport = ({ isOpen, onClose, filters = {} }) => {
   const [data, setData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -15,6 +16,23 @@ const RecordsPDFExport = ({ isOpen, onClose, filters = {} }) => {
       fetchData();
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    const filtered = data.filter((row) =>
+      (filters.plotNo ? row.plotNo.toLowerCase().includes(filters.plotNo.toLowerCase()) : true) &&
+      (filters.stNo ? row.stNo.toLowerCase().includes(filters.stNo.toLowerCase()) : true) &&
+      (filters.phase ? row.phase.toLowerCase().includes(filters.phase.toLowerCase()) : true) &&
+      (filters.from ? row.from.toLowerCase().includes(filters.from.toLowerCase()) : true) &&
+      (filters.carrier ? row.carrier.toLowerCase().includes(filters.carrier.toLowerCase()) : true) &&
+      (filters.to ? row.to.toLowerCase().includes(filters.to.toLowerCase()) : true) &&
+      (filters.purpose ? row.purpose.toLowerCase().includes(filters.purpose.toLowerCase()) : true) &&
+      (filters.date ? row.date.includes(filters.date) : true) &&
+      (filters.status ? row.status.toLowerCase().includes(filters.status.toLowerCase()) : true) &&
+      (filters.remarks ? row.remarks.toLowerCase().includes(filters.remarks.toLowerCase()) : true)
+    );
+    
+    setFilteredData(filtered);
+  }, [filters, data]);
 
   const fetchData = async () => {
     try {
@@ -108,7 +126,7 @@ const RecordsPDFExport = ({ isOpen, onClose, filters = {} }) => {
           <div className="pdf-export-actions">
             <button
               onClick={generatePDF}
-              disabled={isGenerating || loading || data.length === 0}
+              disabled={isGenerating || loading || filteredData.length === 0}
               className="export-btn"
             >
               {isGenerating ? "Generating PDF..." : "Export "}
@@ -151,7 +169,7 @@ const RecordsPDFExport = ({ isOpen, onClose, filters = {} }) => {
                       minute: "2-digit",
                     })}
                   </p>
-                  <p>Total Records: {data.length}</p>
+                  <p>Total Records: {filteredData.length}</p>
                 </div>
               </div>
 
@@ -191,7 +209,7 @@ const RecordsPDFExport = ({ isOpen, onClose, filters = {} }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.map((row, index) => (
+                    {filteredData.map((row, index) => (
                       <tr key={row.id}>
                         <td>{index + 1}</td>
                         <td>{row.plotNo}</td>

@@ -53,7 +53,7 @@ export default function Navbar() {
   return (
     <nav className="navbar">
       <div className="nav-left">
-        <h1 className="logo">File Management System</h1>
+        <h1 className="logo">FMS</h1>
       </div>
 
       <div className="nav-right">

@@ -9,9 +9,8 @@ public interface IFileService
     Task<FileDto?> GetFileByIdAsync(int id);
     Task<FileDto?> UpdateFileAsync(int id, FileDto fileDto);
     Task<bool> DeleteFileAsync(int id);
-    Task<FileDto?> CheckInFileAsync(int id);
-    Task<FileDto?> CheckOutFileAsync(int id);
-    Task<IEnumerable<FileDto>> GetFilesByStatusAsync(string status);
-    Task<IEnumerable<FileDto>> GetFilesByDateRangeAsync(DateTime startDate, DateTime endDate);
+    Task<(IEnumerable<FileDto> Files, int TotalCount)> GetFilteredFilesAsync(
+        FileFilterDto filterDto,
+        CancellationToken cancellationToken = default);
     Task<object> GetFileSummaryAsync();
 }
