@@ -10,7 +10,7 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Add DbContext ( testingcommit)
+// 1. Add DbContext 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
