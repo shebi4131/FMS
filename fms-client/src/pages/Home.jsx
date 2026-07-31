@@ -14,7 +14,7 @@ export default function Home() {
     carrier: "",
     to: "",
     purpose: "",
-    date: "",
+    fileOutDate: "",
     status: "In",
     remarks: ""
   });
@@ -42,7 +42,7 @@ export default function Home() {
         carrier: "",
         to: "",
         purpose: "",
-        date: "",
+        fileOutDate: "",
         status: "In",
         remarks: ""
       });
@@ -207,12 +207,12 @@ export default function Home() {
                   </div>
                   <div className="form-group">
                     <label>
-                      Date <span className="required">*</span>
+                      File Out Date <span className="required">*</span>
                     </label>
                     <input
                       type="date"
-                      name="date"
-                      value={form.date}
+                      name="fileOutDate"
+                      value={form.fileOutDate}
                       onChange={handleChange}
                       max={new Date().toISOString().split("T")[0]}
                       required

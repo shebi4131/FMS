@@ -17,7 +17,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Register Repository
 builder.Services.AddScoped<IFileRepository, FileRepository>();
 builder.Services.AddScoped<IFileService, FileService>();
-
+builder.Services.AddScoped<IEmailService, EmailService>();
 // 2. Add Identity
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()  
     .AddEntityFrameworkStores<ApplicationDbContext>()

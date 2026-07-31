@@ -11,7 +11,8 @@ export default function RecordEdit({ record, isOpen, onClose, onUpdate }) {
     carrier: "",
     to: "",
     purpose: "",
-    date: "",
+    fileOutDate: "",
+    fileInDate: "",
     status: "",
     remarks: ""
   });
@@ -28,10 +29,11 @@ export default function RecordEdit({ record, isOpen, onClose, onUpdate }) {
         stNo: record.stNo || "",
         phase: record.phase || "",
         from: record.from || "",
-        carrier: record.carrier || "",
+        carrier: record.carrier || "",  
         to: record.to || "",
         purpose: record.purpose || "",
-        date: record.date ? formatDateForInput(record.date) : "",
+        fileOutDate: record.fileOutDate ? formatDateForInput(record.fileOutDate) : "",
+        fileInDate: record.fileInDate ? formatDateForInput(record.fileInDate) : "",   // ADD THIS
         status: record.status || "",
         remarks: record.remarks || ""
       });
@@ -73,15 +75,8 @@ export default function RecordEdit({ record, isOpen, onClose, onUpdate }) {
 
   const validateForm = () => {
     const newErrors = {};
-    
-    if (!formData.plotNo.trim()) newErrors.plotNo = "Plot No is required";
-    if (!formData.stNo.trim()) newErrors.stNo = "Street No is required";
-    if (!formData.phase) newErrors.phase = "Phase is required";
-    if (!formData.from.trim()) newErrors.from = "From field is required";
-    if (!formData.to.trim()) newErrors.to = "To field is required";
-    if (!formData.purpose.trim()) newErrors.purpose = "Purpose is required";
-    if (!formData.date) newErrors.date = "Date is required";
     if (!formData.status) newErrors.status = "Status is required";
+    if (!formData.fileInDate) newErrors.fileInDate = "File In Date is required";
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -132,7 +127,8 @@ export default function RecordEdit({ record, isOpen, onClose, onUpdate }) {
       carrier: "",
       to: "",
       purpose: "",
-      date: "",
+      fileOutDate: "",
+      fileInDate: "",
       status: "",
       remarks: ""
     });
@@ -294,16 +290,30 @@ export default function RecordEdit({ record, isOpen, onClose, onUpdate }) {
             </div>
 
             <div className="form-group">
-              <label htmlFor="date">Date *</label>
+              <label htmlFor="fileOutDate">Date Out*</label>
               <input
                 type="date"
-                id="date"
-                name="date"
-                value={formData.date}
+                id="fileOutDate"
+                name="fileOutDate"
+                value={formData.fileOutDate}
                 onChange={handleInputChange}
-                className={errors.date ? "error" : ""}
+                 readOnly
+                className={errors.fileOutDate ? "error" : ""}
               />
-              {errors.date && <span className="error-text">{errors.date}</span>}
+              {errors.fileOutDate && <span className="error-text">{errors.fileOutDate}</span>}
+            </div>
+
+
+ <div className="form-group">
+              <label htmlFor="fileInDate">Date In</label>
+              <input
+                type="date"
+                id="fileInDate"
+                name="fileInDate"
+                value={formData.fileInDate}
+                onChange={handleInputChange}
+                max={new Date().toISOString().split("T")[0]}
+              />
             </div>
 
             <div className="form-group">

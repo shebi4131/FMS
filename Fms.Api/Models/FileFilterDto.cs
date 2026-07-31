@@ -9,8 +9,9 @@
         public string? Carrier { get; set; }
         public string? To { get; set; }
         public string? Purpose { get; set; }
-        public DateTime? Date { get; set; }  
-        public string? Status { get; set; }
+        public DateTime? FileOutDate { get; set; }  
+        public DateTime? FileInDate { get; set; }
+    public string? Status { get; set; }
         public string? Remarks { get; set; }
 
     // Pagination properties

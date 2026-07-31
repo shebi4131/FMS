@@ -15,5 +15,5 @@ public class RegisterDto
     [MinLength(6, ErrorMessage = "Password must be at least 6 characters.")]
     public string Password { get; set; }
 
-    public string Role { get; set; } = "User"; // Default role test
+    public string Role { get; set; } = "User"; // Default role
 }

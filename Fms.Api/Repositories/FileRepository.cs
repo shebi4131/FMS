@@ -28,7 +28,7 @@ public class FileRepository : IFileRepository
     public async Task<IEnumerable<FileDto>> GetAllFilesAsync()
     {
         return await _context.Files.OrderByDescending(f => f.CreatedAt)
-            .ThenByDescending(f => f.Date)
+            .ThenByDescending(f => f.FileOutDate)
             .ToListAsync();
     }
 
@@ -46,7 +46,8 @@ public class FileRepository : IFileRepository
         existingFile.Carrier = fileDto.Carrier;
         existingFile.To = fileDto.To;
         existingFile.Purpose = fileDto.Purpose;
-        existingFile.Date = fileDto.Date;
+        existingFile.FileOutDate = fileDto.FileOutDate;
+        existingFile.FileInDate = fileDto.FileInDate;
         existingFile.Status = fileDto.Status;
         existingFile.Remarks = fileDto.Remarks;
         existingFile.CreatedAt = originalCreatedAt;
@@ -62,8 +63,9 @@ public class FileRepository : IFileRepository
         var file = await _context.Files.FindAsync(id);
         if (file == null)
             return false;
+        file.IsDeleted = true;
+        file.DeletedAt = DateTime.Now;
 
-        _context.Files.Remove(file);
         await _context.SaveChangesAsync();
         return true;
     }
@@ -88,8 +90,10 @@ public class FileRepository : IFileRepository
             query = query.Where(f => f.To.Contains(filterDto.To));
         if (!string.IsNullOrWhiteSpace(filterDto.Purpose))
             query = query.Where(f => f.Purpose.Contains(filterDto.Purpose));
-        if (filterDto.Date.HasValue)
-            query = query.Where(f => f.Date >= filterDto.Date.Value);
+        if (filterDto.FileOutDate.HasValue)
+            query = query.Where(f => f.FileOutDate >= filterDto.FileOutDate.Value);
+        if (filterDto.FileInDate.HasValue)
+            query = query.Where(f => f.FileInDate >= filterDto.FileInDate.Value);
         if (!string.IsNullOrWhiteSpace(filterDto.Status))
             query = query.Where(f => f.Status.Contains(filterDto.Status));
         if (!string.IsNullOrWhiteSpace(filterDto.Remarks))
@@ -99,7 +103,7 @@ public class FileRepository : IFileRepository
         var totalCount = await query.CountAsync(cancellationToken);
 
         // APPLY SORTING
-        query = query.OrderByDescending(f => f.CreatedAt).ThenByDescending(f => f.Date);
+        query = query.OrderByDescending(f => f.CreatedAt).ThenByDescending(f => f.FileOutDate);
 
         // APPLY PAGINATION
         var files = await query

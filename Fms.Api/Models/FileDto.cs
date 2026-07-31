@@ -39,7 +39,9 @@ public class FileDto
 
     [Required(ErrorMessage = "Date is required")]
     [DataType(DataType.Date)]
-    public DateTime Date { get; set; } = DateTime.Now;
+    public DateTime FileOutDate { get; set; } = DateTime.Now;
+    [DataType(DataType.Date)]
+    public DateTime? FileInDate { get; set; } = null;
 
     [Required(ErrorMessage = "Status is required")]
     [RegularExpression("^(In|Out)$", ErrorMessage = "Status must be: In or Out")]
@@ -54,8 +56,10 @@ public class FileDto
     public string? CreatedBy { get; set; }
     public string? UpdatedBy { get; set; }
 
-    // Computed properties for display
-    public string DisplayName => $"{PlotNo} - {From} to {To}";
+    // Soft delete fields
+    public bool IsDeleted { get; set; } = false;
+    public DateTime? DeletedAt { get; set; }
+    public string? DeletedBy { get; set; }
 
     // Computed time properties from audit fields
     public string CreatedTimeShort => CreatedAt.ToString("HH:mm");

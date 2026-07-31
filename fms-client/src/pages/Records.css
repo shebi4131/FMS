@@ -86,9 +86,9 @@
 /* Summary Cards Styles */
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
 .summary-card {
@@ -300,15 +300,16 @@
 
 .action-menu {
   position: absolute;
-  top: 100%;
-  right: 0;
-  background: white;
+  z-index: 9999;
+  background: #fff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  z-index: 100;
-  min-width: 120px;
-  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 160px;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
 }
 
 .action-item {

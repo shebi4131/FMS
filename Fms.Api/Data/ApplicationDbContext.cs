@@ -7,6 +7,8 @@ namespace Fms.Api.Data;
 public class ApplicationDbContext : IdentityDbContext
 {
     public DbSet<FileDto> Files { get; set; }
+    public DbSet<PasswordResetOtp> PasswordResetOtps { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -15,6 +17,8 @@ public class ApplicationDbContext : IdentityDbContext
             entity => { entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).ValueGeneratedOnAdd();
             });
+
+        builder.Entity<FileDto>().HasQueryFilter(f => !f.IsDeleted);
     }
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)

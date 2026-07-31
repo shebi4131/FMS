@@ -1,6 +1,9 @@
-﻿using Fms.Api.Models;
+﻿using Fms.Api.Data;
+using Fms.Api.Models;
+using Fms.Api.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -14,11 +17,14 @@ public class AuthController : ControllerBase
 {
     private readonly UserManager<IdentityUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
-
-    public AuthController(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager)
+    private readonly ApplicationDbContext _dbContext;
+    private readonly IEmailService _emailService;
+    public AuthController(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, ApplicationDbContext dbContext, IEmailService emailService)
     {
         _userManager = userManager;
         _roleManager = roleManager;
+        _dbContext = dbContext;
+        _emailService = emailService;
     }
 
     [HttpPost("register")]
@@ -117,4 +123,86 @@ public class AuthController : ControllerBase
         });
     }
 
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordDto model)
+    {
+        var user = await _userManager.FindByEmailAsync(model.Email);
+
+        // Always return success message regardless, to avoid leaking which emails are registered
+        if (user == null)
+            return Ok(new { message = "If this email is registered, a code has been sent." });
+
+        var code = new Random().Next(1000, 9999).ToString();
+
+        var otp = new PasswordResetOtp
+        {
+            Email = model.Email,
+            Code = code,
+            ExpiresAt = DateTime.UtcNow.AddMinutes(10),
+            IsUsed = false
+        };
+
+        _dbContext.PasswordResetOtps.Add(otp);
+        await _dbContext.SaveChangesAsync();
+
+        var body = $@"
+        <h3>Password Reset Code</h3>
+        <p>Your verification code is:</p>
+        <h2>{code}</h2>
+        <p>This code expires in 10 minutes.</p>";
+
+        await _emailService.SendEmailAsync(model.Email, "FMS Password Reset Code", body);
+
+        return Ok(new { message = "If this email is registered, a code has been sent." });
+    }
+
+    [HttpPost("verify-otp")]
+    public async Task<IActionResult> VerifyOtp(VerifyOtpDto model)
+    {
+        var otp = await _dbContext.PasswordResetOtps
+            .Where(o => o.Email == model.Email && o.Code == model.Code && !o.IsUsed)
+            .OrderByDescending(o => o.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (otp == null)
+            return BadRequest(new { message = "Invalid code" });
+
+        if (otp.ExpiresAt < DateTime.UtcNow)
+            return BadRequest(new { message = "Code has expired" });
+
+        return Ok(new { message = "Code verified" });
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword(ResetPasswordDto model)
+    {
+        if (model.NewPassword != model.ConfirmPassword)
+            return BadRequest(new { message = "Passwords do not match" });
+
+        var otp = await _dbContext.PasswordResetOtps
+            .Where(o => o.Email == model.Email && o.Code == model.Code && !o.IsUsed)
+            .OrderByDescending(o => o.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (otp == null)
+            return BadRequest(new { message = "Invalid code" });
+
+        if (otp.ExpiresAt < DateTime.UtcNow)
+            return BadRequest(new { message = "Code has expired" });
+
+        var user = await _userManager.FindByEmailAsync(model.Email);
+        if (user == null)
+            return BadRequest(new { message = "User not found" });
+
+        var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var result = await _userManager.ResetPasswordAsync(user, resetToken, model.NewPassword);
+
+        if (!result.Succeeded)
+            return BadRequest(result.Errors);
+
+        otp.IsUsed = true;
+        await _dbContext.SaveChangesAsync();
+
+        return Ok(new { message = "Password reset successfully" });
+    }
 }

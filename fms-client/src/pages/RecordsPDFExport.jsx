@@ -26,7 +26,7 @@ const RecordsPDFExport = ({ isOpen, onClose, filters = {} }) => {
       (filters.carrier ? row.carrier.toLowerCase().includes(filters.carrier.toLowerCase()) : true) &&
       (filters.to ? row.to.toLowerCase().includes(filters.to.toLowerCase()) : true) &&
       (filters.purpose ? row.purpose.toLowerCase().includes(filters.purpose.toLowerCase()) : true) &&
-      (filters.date ? row.date.includes(filters.date) : true) &&
+(filters.fileOutDate ? row.fileOutDate && row.fileOutDate.includes(filters.fileOutDate) : true) &&
       (filters.status ? row.status.toLowerCase().includes(filters.status.toLowerCase()) : true) &&
       (filters.remarks ? row.remarks.toLowerCase().includes(filters.remarks.toLowerCase()) : true)
     );
@@ -203,7 +203,8 @@ const RecordsPDFExport = ({ isOpen, onClose, filters = {} }) => {
                       <th>Carrier</th>
                       <th>To</th>
                       <th>Purpose</th>
-                      <th>Date</th>
+                     <th>Out Date</th>
+<th>In Date</th>
                       <th>Status</th>
                       <th>Remarks</th>
                     </tr>
@@ -219,23 +220,30 @@ const RecordsPDFExport = ({ isOpen, onClose, filters = {} }) => {
                         <td>{row.carrier}</td>
                         <td>{row.to}</td>
                         <td>{row.purpose}</td>
-                        <td>
-                          {" "}
-                          {new Date(row.date).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </td>
-                        <td>
-                          <span
-                            className={`pdf-status-badge status-${row.status.toLowerCase()}`}
-                          >
-                            {row.status}
-                          </span>
-                        </td>
+                       <td>
+  {row.fileOutDate
+    ? new Date(row.fileOutDate).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      })
+    : "-"}
+</td>
+<td>
+  {row.fileInDate
+    ? new Date(row.fileInDate).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      })
+    : "-"}
+</td>
                         <td>{row.remarks}</td>
                       </tr>
                     ))}

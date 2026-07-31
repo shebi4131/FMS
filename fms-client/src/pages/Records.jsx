@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { createPortal } from "react-dom";import { useNavigate } from "react-router-dom";
 import "./Records.css";
 import Navbar from "../components/Navbar";
 import { api } from "../lib/api";
@@ -13,15 +13,17 @@ export default function Records() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeDropdown, setActiveDropdown] = useState(null);
+const [activeDropdown, setActiveDropdown] = useState(null);
+const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
   const [pdfExportModal, setPdfExportModal] = useState(false);
 
   // Summary data state
-  const [summaryData, setSummaryData] = useState({
+ const [summaryData, setSummaryData] = useState({
     totalFiles: 0,
     filesIn: 0,
     filesOut: 0,
-    todaysFiles: 0,
+    todaysOutFiles: 0,
+    todaysInFiles: 0,
     recentFiles: 0
   });
   const [summaryLoading, setSummaryLoading] = useState(true);
@@ -38,7 +40,8 @@ export default function Records() {
     carrier: "",
     to: "",
     purpose: "",
-    date: "",
+    fileOutDate: "",
+    fileInDate: "",
     status: "",
     remarks: ""
   });
@@ -154,7 +157,7 @@ export default function Records() {
       carrier: "",
       to: "",
       purpose: "",
-      date: "",
+      fileOutDate: "",
       status: "",
       remarks: ""
     };
@@ -211,8 +214,17 @@ export default function Records() {
     setDeleteModal({ isOpen: false, record: null });
   };
 
-  const toggleDropdown = (rowId) => {
-    setActiveDropdown(activeDropdown === rowId ? null : rowId);
+ const toggleDropdown = (rowId, event) => {
+    if (activeDropdown === rowId) {
+      setActiveDropdown(null);
+      return;
+    }
+    const rect = event.currentTarget.getBoundingClientRect();
+    setDropdownPos({
+      top: rect.bottom + window.scrollY + 4,
+      left: rect.right + window.scrollX - 160,
+    });
+    setActiveDropdown(rowId);
   };
 
   // Close dropdown when clicking outside
@@ -250,7 +262,7 @@ export default function Records() {
   };
 
   // Summary Cards Component
-  const SummaryCards = () => (
+const SummaryCards = () => (
     <div className="summary-cards">
       <div className="summary-card">
         <div className="card-icon">
@@ -301,9 +313,23 @@ export default function Records() {
           </svg>
         </div>
         <div className="card-content">
-          <h3>Today's Files</h3>
+          <h3>Today's Out</h3>
           <span className="card-number">
-            {summaryLoading ? "..." : summaryData.todaysFiles.toLocaleString()}
+            {summaryLoading ? "..." : summaryData.todaysOutFiles.toLocaleString()}
+          </span>
+        </div>
+      </div>
+
+      <div className="summary-card">
+        <div className="card-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M16.2,16.2L11,13V7H12.5V12.2L17,14.9L16.2,16.2Z"/>
+          </svg>
+        </div>
+        <div className="card-content">
+          <h3>Today's In</h3>
+          <span className="card-number">
+            {summaryLoading ? "..." : summaryData.todaysInFiles.toLocaleString()}
           </span>
         </div>
       </div>
@@ -443,7 +469,8 @@ export default function Records() {
                 <th>Carrier</th>
                 <th>To</th>
                 <th>Purpose</th>
-                <th>Date</th>
+                <th>Out Date</th>
+                <th>In Date</th>
                 <th>Remarks</th>
                 <th>Status</th>
                 <th>Action</th>
@@ -520,8 +547,15 @@ export default function Records() {
                 <td className="filter-cell">
                   <input 
                     type="date" 
-                    value={filters.date} 
-                    onChange={(e) => setFilters({ ...filters, date: e.target.value })} 
+                    value={filters.fileOutDate} 
+                    onChange={(e) => setFilters({ ...filters, fileOutDate: e.target.value })} 
+                  />
+                </td>
+                 <td className="filter-cell">
+                  <input 
+                    type="date" 
+                    value={filters.fileInDate} 
+                    onChange={(e) => setFilters({ ...filters, fileInDate: e.target.value })} 
                   />
                 </td>
                 <td className="filter-cell">
@@ -562,24 +596,39 @@ export default function Records() {
                     <td>{row.to}</td>
                     <td>{row.purpose}</td>
                     <td>
-  {new Date(row.date).toLocaleString('en-US', {
+  {new Date(row.fileOutDate).toLocaleString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric'
-  })}{" "} 
+  })
+  }{" "} 
   {`(${new Date(row.createdAt).toLocaleString('en-US', {
   hour: 'numeric',
   minute: '2-digit',
   hour12: true
 })})`}
-
 </td>
-
+<td>
+  {row.fileInDate
+    ? <>
+        {new Date(row.fileInDate).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        })}{" "}
+        {`(${new Date(row.fileInDate).toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        })})`}
+      </>
+    : "-"}
+</td>
                     <td>{row.remarks}</td>
                     <td>
-                      <span className={`status-badge status-${row.status.toLowerCase()}`}>
-                        {row.status}
-                      </span>
+                     <span className={`status-badge status-${(row.status || "").toLowerCase()}`}>
+  {row.status}
+</span>
                     </td>
                     <td className="action-cell">
                       <div className="action-dropdown">
@@ -587,15 +636,19 @@ export default function Records() {
                           className="action-trigger"
                           onClick={(e) => {
                             e.stopPropagation();
-                            toggleDropdown(row.id);
+                            toggleDropdown(row.id, e);
                           }}
                         >
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M7 10l5 5 5-5z"/>
                           </svg>
                         </button>
-                        {activeDropdown === row.id && (
-                          <div className="action-menu">
+                       {activeDropdown === row.id && createPortal(
+                          <div 
+                            className="action-menu"
+                            style={{ top: dropdownPos.top, left: dropdownPos.left }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <button 
                               className="action-item edit-btn"
                               onClick={() => handleEdit(row)}
@@ -616,7 +669,8 @@ export default function Records() {
                                 Delete
                               </button>
                             )}
-                          </div>
+                          </div>,
+                          document.body
                         )}
                       </div>
                     </td>

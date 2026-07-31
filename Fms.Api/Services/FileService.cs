@@ -16,16 +16,17 @@ public class FileService : IFileService
     {
         fileDto.CreatedAt = DateTime.Now;
         fileDto.UpdatedAt = null;
+        fileDto.FileInDate = null;
 
-        if (fileDto.Date == default)
-            fileDto.Date = DateTime.Now;
+        if (fileDto.FileOutDate == default)
+            fileDto.FileOutDate = DateTime.Now;
 
         if (string.IsNullOrEmpty(fileDto.Status))
             fileDto.Status = "In"; 
 
-        if (fileDto.Date > DateTime.Now.Date)
+        if (fileDto.FileOutDate > DateTime.Now)
         {
-            throw new ArgumentException("File date cannot be in the future.");
+            throw new ArgumentException("File out date cannot be in the future.");
         }
 
         return await _files.CreateFileAsync(fileDto);
@@ -56,9 +57,9 @@ public class FileService : IFileService
         if (existingFile == null)
             return null;
 
-        if (fileDto.Date > DateTime.Now.Date)
+        if (fileDto.FileOutDate > DateTime.Now)
         {
-            throw new ArgumentException("File date cannot be in the future.");
+            throw new ArgumentException("File out date cannot be in the future.");
         }
 
         var originalCreatedAt = existingFile.CreatedAt;
@@ -71,7 +72,24 @@ public class FileService : IFileService
         existingFile.Carrier = fileDto.Carrier;
         existingFile.To = fileDto.To;
         existingFile.Purpose = fileDto.Purpose;
-        existingFile.Date = fileDto.Date;
+        existingFile.FileOutDate = fileDto.FileOutDate;
+
+        // Sync FileInDate with Status so they can never contradict each other.
+        if (fileDto.Status == "In")
+        {
+            // Stamp real server time only the first time it's marked In.
+            if (!existingFile.FileInDate.HasValue)
+            {
+                existingFile.FileInDate = DateTime.Now;
+            }
+            // If already set, leave the original timestamp untouched on subsequent saves.
+        }
+        else
+        {
+            // Status is "Out" (or anything else) — file hasn't returned, so no in-date.
+            existingFile.FileInDate = null;
+        }
+
         existingFile.Status = fileDto.Status;
         existingFile.Remarks = fileDto.Remarks;
 
@@ -100,7 +118,8 @@ public class FileService : IFileService
             TotalFiles = allFiles.Count(),
             FilesIn = allFiles.Count(f => f.Status == "In"),
             FilesOut = allFiles.Count(f => f.Status == "Out"),
-            TodaysFiles = allFiles.Count(f => f.Date.Date == DateTime.Today),
+            TodaysOutFiles = allFiles.Count(f => f.FileOutDate.Date == DateTime.Today),
+            TodaysInFiles = allFiles.Count(f => f.FileInDate.HasValue && f.FileInDate.Value.Date == DateTime.Today),
             RecentFiles = allFiles.Count(f => f.CreatedAt >= DateTime.Today.AddDays(-7))
         };
     }
