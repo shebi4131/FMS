@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import ForgetPass from './pages/ForgetPass';
 import Profile from './pages/Profile';
 import Records from './pages/Records';
+import RecordRoomRegister from './pages/RecordRoomRegister'; // ADD THIS
 import UserManagement from './components/UserManagement';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
@@ -13,7 +14,6 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public routes - redirect to records if already logged in */}
         <Route 
           path="/login" 
           element={
@@ -39,7 +39,6 @@ export default function App() {
           } 
         />
 
-        {/* Protected routes - require login */}
         <Route 
           path="/home" 
           element={
@@ -72,11 +71,18 @@ export default function App() {
             </ProtectedRoute>
           } 
         />
+        {/* ADD THIS */}
+        <Route 
+          path="/register" 
+          element={
+            <ProtectedRoute>
+              <RecordRoomRegister />
+            </ProtectedRoute>
+          } 
+        />
 
-        {/* Redirect root to login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* Catch-all route for 404 */}
         <Route 
           path="*" 
           element={

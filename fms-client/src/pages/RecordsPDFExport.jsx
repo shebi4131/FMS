@@ -27,6 +27,7 @@ const RecordsPDFExport = ({ isOpen, onClose, filters = {} }) => {
       (filters.to ? row.to.toLowerCase().includes(filters.to.toLowerCase()) : true) &&
       (filters.purpose ? row.purpose.toLowerCase().includes(filters.purpose.toLowerCase()) : true) &&
 (filters.fileOutDate ? row.fileOutDate && row.fileOutDate.includes(filters.fileOutDate) : true) &&
+      (filters.fileInDate ? row.fileInDate && row.fileInDate.includes(filters.fileInDate) : true) &&
       (filters.status ? row.status.toLowerCase().includes(filters.status.toLowerCase()) : true) &&
       (filters.remarks ? row.remarks.toLowerCase().includes(filters.remarks.toLowerCase()) : true)
     );
@@ -106,6 +107,15 @@ const RecordsPDFExport = ({ isOpen, onClose, filters = {} }) => {
       const fileName = `Records_Export_${
         new Date().toISOString().split("T")[0]
       }.pdf`;
+
+      // Send PDF to email first
+      const pdfBase64 = pdf.output("datauristring").split(",")[1];
+      await api.post("/file/send-pdf-email", {
+        pdfBase64,
+        fileName,
+      });
+
+      // Download after email is sent
       pdf.save(fileName);
     } catch (error) {
       console.error("Error generating PDF:", error);
@@ -129,7 +139,7 @@ const RecordsPDFExport = ({ isOpen, onClose, filters = {} }) => {
               disabled={isGenerating || loading || filteredData.length === 0}
               className="export-btn"
             >
-              {isGenerating ? "Generating PDF..." : "Export "}
+              {isGenerating ? "Exporting..." : "Export "}
             </button>
             <button onClick={onClose} className="close-btn">
               ✕

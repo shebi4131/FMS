@@ -18,7 +18,7 @@
 .login-form h2 {
   text-align: center;
   margin-bottom: 25px;
-  color: #2e7d32; /* Green heading */
+  color: #16a34a; /* Green heading */
   font-family: 'Segoe UI', sans-serif;
 }
 
@@ -43,14 +43,14 @@ input {
 }
 
 input:focus {
-  border-color: #2e7d32;
+  border-color: #16a34a;
   box-shadow: 0 0 4px rgba(46, 125, 50, 0.4);
 }
 
 .login-form button {
   width: 100%;
   padding: 12px;
-  background: #2e7d32 !important;
+  background: #16a34a !important;
   color: white;
   font-size: 15px;
   font-weight: 600;
@@ -76,7 +76,7 @@ button:disabled {
 }
 
 .signup-link a, .forgot-link a {
-  color: #2e7d32;
+  color: #16a34a;
   text-decoration: none;
   font-weight: 500;
 }

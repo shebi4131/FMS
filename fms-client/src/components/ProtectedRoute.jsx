@@ -1,4 +1,5 @@
 import { Navigate } from 'react-router-dom';
+import DashboardLayout from '../layouts/DashboardLayout';
 
 const ProtectedRoute = ({ children }) => {
   const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
@@ -9,7 +10,7 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
   
-  return children;
+  return <DashboardLayout>{children}</DashboardLayout>;
 };
 
 export default ProtectedRoute;

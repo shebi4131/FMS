@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Navbar from "../components/Navbar";
+
 import { api } from "../lib/api";
 import "./Home.css";
 import { useNavigate } from "react-router-dom";
@@ -57,7 +57,6 @@ export default function Home() {
 
   return (
     <div className="home">
-      <Navbar />
       <div className="home-body">
         <div className="home-content">
           <div className="card form-card">
@@ -132,6 +131,8 @@ export default function Home() {
                       <option value="JG-I">JG-I</option>
                       <option value="JG-II">JG-II</option>
                       <option value="KT">KT</option>
+                      <option value="KT Ext">KT Ext</option>
+                      <option value="Kahuta Road">Kahuta Road</option>
                       <option value="NAEHS">NAEHS</option>
                     </select>
                   </div>
@@ -201,6 +202,12 @@ export default function Home() {
                       <option value="demarcation">Demarcation</option>
                       <option value="legal">Legal</option>
                       <option value="accounts">Accounts</option>
+                      <option value="posession">Posession</option>
+                      <option value="map">Map</option>
+                      <option value="completion">Completion</option>
+                      <option value="water connection">Water Connection</option>
+                      <option value="noc/nec">NOC/NEC</option>
+                      <option value="noc iesco">NOC IESCO</option>
                       <option value="review">Review</option>
                       <option value="other">Other</option>
                     </select>

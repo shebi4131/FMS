@@ -91,9 +91,9 @@ public class FileRepository : IFileRepository
         if (!string.IsNullOrWhiteSpace(filterDto.Purpose))
             query = query.Where(f => f.Purpose.Contains(filterDto.Purpose));
         if (filterDto.FileOutDate.HasValue)
-            query = query.Where(f => f.FileOutDate >= filterDto.FileOutDate.Value);
+            query = query.Where(f => f.FileOutDate.Date == filterDto.FileOutDate.Value.Date);
         if (filterDto.FileInDate.HasValue)
-            query = query.Where(f => f.FileInDate >= filterDto.FileInDate.Value);
+            query = query.Where(f => f.FileInDate.HasValue && f.FileInDate.Value.Date == filterDto.FileInDate.Value.Date);
         if (!string.IsNullOrWhiteSpace(filterDto.Status))
             query = query.Where(f => f.Status.Contains(filterDto.Status));
         if (!string.IsNullOrWhiteSpace(filterDto.Remarks))

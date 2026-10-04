@@ -4,35 +4,69 @@
   top: 0;
   left: 0;
   right: 0;
-  
   display: flex;
   justify-content: space-between;
   align-items: center;
-  
-  background: #2e7d32;
+  background: #16a34a;
   color: white;
-  padding: 0 32px;
-  height: 65px;
-  
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 0 24px;
+  height: 60px;
   z-index: 1000;
-  
-  transition: all 0.3s ease;
 }
 
 /* Left Section */
 .nav-left {
   display: flex;
   align-items: center;
+  gap: 24px;
 }
 
 .logo {
-  font-size: 1.4rem;
-  font-weight: 600;
-  letter-spacing: 0.5px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
   margin: 0;
   color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Navigation Menu */
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nav-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: rgba(255, 255, 255, 0.85);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.nav-menu-item:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.nav-menu-item.active {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+  font-weight: 600;
+}
+
+.nav-menu-icon {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
 }
 
 /* Right Section - Profile */
@@ -48,74 +82,63 @@
 }
 
 .profile-icon {
-  font-size: 2rem;
+  font-size: 1.75rem;
   cursor: pointer;
   color: white;
-  padding: 8px;
+  padding: 6px;
   border-radius: 50%;
-  
-  transition: all 0.3s ease;
+  transition: background 0.2s ease;
 }
 
 .profile-icon:hover {
-  color: #c8e6c9;
-  transform: scale(1.1);
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
 }
 
-/* Dropdown Menu - Fixed positioning and z-index */
+/* Dropdown Menu */
 .dropdown-menu {
   position: absolute;
-  top: 53%;
+  top: 100%;
   right: 0;
   margin-top: 8px;
-  
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
   min-width: 160px;
   overflow: hidden;
-  
-  /* Higher z-index to ensure visibility */
   z-index: 9999;
-  
-  /* Animation */
-  animation: slideDown 0.2s ease-out;
+  animation: slideDown 0.15s ease-out;
 }
 
 .dropdown-item {
-  padding: 12px 16px;
+  padding: 11px 16px;
   font-size: 14px;
   font-weight: 500;
-  color: #333;
+  color: #374151;
   background: transparent;
   border: none;
   text-align: left;
   cursor: pointer;
-  
-  transition: all 0.2s ease;
+  transition: background 0.15s ease;
   width: 100%;
   white-space: nowrap;
 }
 
 .dropdown-item:hover {
-  background: #2e7d32;
-  color: white;
+  background: #f0fdf4;
+  color: #16a34a;
 }
 
 .dropdown-item:not(:last-child) {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid #f3f4f6;
 }
 
 /* Animation */
 @keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-6px);
   }
   to {
     opacity: 1;
@@ -123,42 +146,36 @@
   }
 }
 
-/* Responsive Design */
+/* Responsive */
 @media (max-width: 768px) {
   .navbar {
-    padding: 0 20px;
-    height: 60px;
-  }
-  
-  .logo {
-    font-size: 1.2rem;
-  }
-  
-  .profile-icon {
-    font-size: 1.8rem;
-  }
-  
-  .dropdown-menu {
-    min-width: 140px;
-    right: -10px;
-  }
-  
-  .dropdown-item {
-    padding: 10px 14px;
-    font-size: 13px;
-  }
-}
-
-@media (max-width: 480px) {
-  .navbar {
     padding: 0 16px;
+    height: 56px;
   }
-  
+
+  .nav-left {
+    gap: 12px;
+  }
+
   .logo {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
   }
-  
+
+  .nav-menu {
+    gap: 2px;
+  }
+
+  .nav-menu-item {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+
   .profile-icon {
     font-size: 1.6rem;
+  }
+
+  .dropdown-menu {
+    min-width: 150px;
+    right: -8px;
   }
 }

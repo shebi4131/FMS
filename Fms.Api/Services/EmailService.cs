@@ -33,4 +33,30 @@ public class EmailService : IEmailService
 
         await client.SendMailAsync(mail);
     }
+
+    public async Task SendEmailWithAttachmentAsync(string toEmail, string subject, string body, byte[] attachment, string fileName)
+    {
+        var smtpSettings = _config.GetSection("Smtp");
+
+        using var client = new SmtpClient(smtpSettings["Host"], int.Parse(smtpSettings["Port"]))
+        {
+            Credentials = new NetworkCredential(smtpSettings["Username"], smtpSettings["Password"]),
+            EnableSsl = true
+        };
+
+        var mail = new MailMessage
+        {
+            From = new MailAddress(smtpSettings["Username"], "FMS System"),
+            Subject = subject,
+            Body = body,
+            IsBodyHtml = true
+        };
+        mail.To.Add(toEmail);
+
+        var stream = new MemoryStream(attachment);
+        var attachmentObj = new Attachment(stream, fileName, "application/pdf");
+        mail.Attachments.Add(attachmentObj);
+
+        await client.SendMailAsync(mail);
+    }
 }

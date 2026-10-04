@@ -10,9 +10,11 @@ namespace Fms.Api.Controllers;
 public class FileController : ControllerBase
 {
     private readonly IFileService _fileService;
-    public FileController(IFileService fileService)
+    private readonly IEmailService _emailService;
+    public FileController(IFileService fileService, IEmailService emailService)
     {
         _fileService = fileService;
+        _emailService = emailService;
     }
     [HttpPost("create")]
     public async Task<FileDto> CreateAsync(FileDto fileDto)
@@ -74,5 +76,30 @@ public class FileController : ControllerBase
     {
         var summary = await _fileService.GetFileSummaryAsync();
         return Ok(summary);
+    }
+
+    [HttpPost("send-pdf-email")]
+    public async Task<IActionResult> SendPdfEmailAsync([FromBody] SendPdfEmailDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.PdfBase64))
+            return BadRequest(new { message = "PDF data is required." });
+
+        var pdfBytes = Convert.FromBase64String(dto.PdfBase64);
+        var fileName = string.IsNullOrWhiteSpace(dto.FileName)
+            ? $"Records_Export_{DateTime.Now:yyyy-MM-dd}.pdf"
+            : dto.FileName;
+
+        var body = $@"
+        <h3>FMS Records Export</h3>
+        <p>Please find the attached records export generated on {DateTime.Now:dd MMM yyyy hh:mm tt}.</p>";
+
+        await _emailService.SendEmailWithAttachmentAsync(
+            "shoaibahmed4131@gmail.com",
+            "FMS - Records Export",
+            body,
+            pdfBytes,
+            fileName);
+
+        return Ok(new { message = "PDF sent successfully to shoaibahmed4131@gmail.com" });
     }
 }

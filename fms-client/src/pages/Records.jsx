@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";import { useNavigate } from "react-router-dom";
 import "./Records.css";
-import Navbar from "../components/Navbar";
+
 import { api } from "../lib/api";
 import RecordEdit from "./RecordEdit";
 import RecordDelete from "./RecordDelete";
@@ -77,7 +77,7 @@ const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
   }, []);
 
   // Fetch filtered data from backend
-  const fetchFilteredData = useCallback(async (page = 1, currentFilters = filters) => {
+  const fetchFilteredData = useCallback(async (page = 1, currentFilters = {}) => {
     try {
       setLoading(true);
       setError(null);
@@ -116,29 +116,31 @@ const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
     } finally {
       setLoading(false);
     }
-  }, [filters, itemsPerPage]);
+  }, [itemsPerPage]);
 
-  // Debounced filter function
-  const debouncedFetchData = useCallback((newFilters) => {
-    const timeoutId = setTimeout(() => {
-      setCurrentPage(1);
-      fetchFilteredData(1, newFilters);
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [fetchFilteredData]);
-
-  // Initial data fetch
+  // Fetch summary once on mount.
   useEffect(() => {
     fetchSummaryData();
-    fetchFilteredData(1);
-  }, [fetchSummaryData, fetchFilteredData]);
+  }, [fetchSummaryData]);
 
-  // Handle filter changes with debouncing
+  // Single source of truth for loading records: fetch immediately on first
+  // mount, then debounce every subsequent filter change so typing fires just
+  // ONE request (not one per keystroke, and not a duplicate immediate call).
+  const isFirstLoad = useRef(true);
   useEffect(() => {
-    const cleanup = debouncedFetchData(filters);
-    return cleanup;
-  }, [filters, debouncedFetchData]);
+    if (isFirstLoad.current) {
+      isFirstLoad.current = false;
+      fetchFilteredData(1, filters);
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      setCurrentPage(1);
+      fetchFilteredData(1, filters);
+    }, 450);
+
+    return () => clearTimeout(timeoutId);
+  }, [filters, fetchFilteredData]);
 
   // Handle page changes
   const handlePageChange = (page) => {
@@ -158,6 +160,7 @@ const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
       to: "",
       purpose: "",
       fileOutDate: "",
+      fileInDate: "",
       status: "",
       remarks: ""
     };
@@ -354,7 +357,6 @@ const SummaryCards = () => (
   if (loading && data.length === 0) {
     return (
       <div className="dashboard-page">
-        <Navbar />
         <div className="dashboard-header">
           <div className="header-content">
             <div className="header-text">
@@ -391,7 +393,6 @@ const SummaryCards = () => (
   if (error && data.length === 0) {
     return (
       <div className="dashboard-page">
-        <Navbar />
         <div className="dashboard-header">
           <div className="header-content">
             <div className="header-text">
@@ -431,9 +432,8 @@ const SummaryCards = () => (
   }
 
   return (
-    <div className="dashboard-page">
-      <Navbar />
-      <div className="dashboard-header">
+      <div className="dashboard-page">
+        <div className="dashboard-header">
         <div className="header-content">
           <div className="header-text">
             <h1 className="system-title">FECHS - File Management System</h1>
@@ -459,6 +459,52 @@ const SummaryCards = () => (
         <SummaryCards />
         
         <div className="table-container">
+          <div className="filter-bar">
+            <div className="filter-row-grid">
+              <input type="text" placeholder="Plot No" value={filters.plotNo} onChange={(e) => setFilters({ ...filters, plotNo: e.target.value })} />
+              <input type="text" placeholder="Street No" value={filters.stNo} onChange={(e) => setFilters({ ...filters, stNo: e.target.value })} />
+              <select value={filters.phase} onChange={(e) => setFilters({ ...filters, phase: e.target.value })}>
+                <option value="">Phase</option>
+                <option value="JG-I">JG-I</option>
+                <option value="JG-II">JG-II</option>
+                <option value="KT">KT</option>
+                <option value="KT Ext">KT Ext</option>
+                <option value="Kahuta Road">Kahuta Road</option>
+                <option value="NAEHS">NAEHS</option>
+              </select>
+              <input type="text" placeholder="From" value={filters.from} onChange={(e) => setFilters({ ...filters, from: e.target.value })} />
+              <input type="text" placeholder="To" value={filters.to} onChange={(e) => setFilters({ ...filters, to: e.target.value })} />
+              <select value={filters.purpose} onChange={(e) => setFilters({ ...filters, purpose: e.target.value })}>
+                <option value="">Purpose</option>
+                <option value="ndc">NDC</option>
+                <option value="transfer">Transfer</option>
+                <option value="demarcation">Demarcation</option>
+                <option value="legal">Legal</option>
+                <option value="accounts">Accounts</option>
+                <option value="posession">Posession</option>
+                <option value="map">Map</option>
+                <option value="completion">Completion</option>
+                <option value="water connection">Water Connection</option>
+                <option value="noc/nec">NOC/NEC</option>
+                <option value="noc iesco">NOC IESCO</option>
+                <option value="review">Review</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div className="filter-row-grid">
+              <input type="text" placeholder="Carrier" value={filters.carrier} onChange={(e) => setFilters({ ...filters, carrier: e.target.value })} />
+              <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}>
+                <option value="">Status</option>
+                <option value="In">In</option>
+                <option value="Out">Out</option>
+              </select>
+              <input type="date" value={filters.fileOutDate} onChange={(e) => setFilters({ ...filters, fileOutDate: e.target.value })} />
+              <input type="date" value={filters.fileInDate} onChange={(e) => setFilters({ ...filters, fileInDate: e.target.value })} />
+              <input type="text" placeholder="Remarks" value={filters.remarks} onChange={(e) => setFilters({ ...filters, remarks: e.target.value })} />
+              <button className="clear-filters" onClick={handleReset} title="Clear All Filters">Clear</button>
+            </div>
+          </div>
+
           <table className="records-table">
             <thead>
               <tr className="header-row">
@@ -475,118 +521,11 @@ const SummaryCards = () => (
                 <th>Status</th>
                 <th>Action</th>
               </tr>
-              
-              <tr className="filter-row">
-                <td className="filter-cell">
-                  <input 
-                    type="text" 
-                    placeholder="Plot No" 
-                    value={filters.plotNo} 
-                    onChange={(e) => setFilters({ ...filters, plotNo: e.target.value })} 
-                  />
-                </td>
-                <td className="filter-cell">
-                  <input 
-                    type="text" 
-                    placeholder="Street No" 
-                    value={filters.stNo} 
-                    onChange={(e) => setFilters({ ...filters, stNo: e.target.value })} 
-                  />
-                </td>
-                <td className="filter-cell">
-                  <select 
-                    value={filters.phase} 
-                    onChange={(e) => setFilters({ ...filters, phase: e.target.value })}
-                  >
-                    <option value=""></option>
-                    <option value="JG-I">JG-I</option>
-                    <option value="JG-II">JG-II</option>
-                    <option value="KT">KT</option>
-                    <option value="NAEHS">NAEHS</option>
-                  </select>
-                </td>
-                <td className="filter-cell">
-                  <input 
-                    type="text" 
-                    placeholder="From" 
-                    value={filters.from} 
-                    onChange={(e) => setFilters({ ...filters, from: e.target.value })} 
-                  />
-                </td>
-                <td className="filter-cell">
-                  <input 
-                    type="text" 
-                    placeholder="Carrier" 
-                    value={filters.carrier} 
-                    onChange={(e) => setFilters({ ...filters, carrier: e.target.value })} 
-                  />
-                </td>
-                <td className="filter-cell">
-                  <input 
-                    type="text" 
-                    placeholder="To" 
-                    value={filters.to} 
-                    onChange={(e) => setFilters({ ...filters, to: e.target.value })} 
-                  />
-                </td>
-                <td className="filter-cell">
-                   <select 
-                    value={filters.purpose} 
-                    onChange={(e) => setFilters({ ...filters, purpose: e.target.value })}
-                  >
-                    <option value=""></option>
-                    <option value="ndc">NDC</option>
-                    <option value="transfer">Transfer</option>
-                    <option value="demarcation">Demarcation</option>
-                    <option value="legal">Legal</option>
-                    <option value="accounts">Accounts</option>
-                    <option value="review">Review</option>
-                    <option value="other">Other</option>
-                  </select>
-                </td>
-                <td className="filter-cell">
-                  <input 
-                    type="date" 
-                    value={filters.fileOutDate} 
-                    onChange={(e) => setFilters({ ...filters, fileOutDate: e.target.value })} 
-                  />
-                </td>
-                 <td className="filter-cell">
-                  <input 
-                    type="date" 
-                    value={filters.fileInDate} 
-                    onChange={(e) => setFilters({ ...filters, fileInDate: e.target.value })} 
-                  />
-                </td>
-                <td className="filter-cell">
-                  <input 
-                    type="text" 
-                    placeholder="Remarks" 
-                    value={filters.remarks} 
-                    onChange={(e) => setFilters({ ...filters, remarks: e.target.value })} 
-                  />
-                </td>
-                <td className="filter-cell">
-                  <select 
-                    value={filters.status} 
-                    onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                  >
-                    <option value=""></option>
-                    <option value="In">In</option>
-                    <option value="Out">Out</option>
-                  </select>
-                </td>
-                <td className="filter-cell">
-                  <button className="clear-filters" onClick={handleReset} title="Clear All Filters">
-                    ✕
-                  </button>
-                </td>
-              </tr>
             </thead>
 
             <tbody>
               {data.length > 0 ? (
-                data.map((row, index) => (
+                data.map((row) => (
                   <tr key={row.id} className="data-row">
                     <td>{row.plotNo}</td>
                     <td>{row.stNo}</td>

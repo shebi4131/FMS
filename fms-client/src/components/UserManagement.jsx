@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 import './UserManagement.css';
-import Navbar from './Navbar';
+
 
 export default function UserManagement() {
   const [users, setUsers] = useState([]);
@@ -145,7 +145,6 @@ export default function UserManagement() {
 
   if (loading) return (
     <div className="user-management">
-      <Navbar />
       <div className="loading-spinner">
         <div className="spinner"></div>
         <p>Loading users and roles...</p>
@@ -155,7 +154,6 @@ export default function UserManagement() {
 
   if (error && users.length === 0) return (
     <div className="user-management">
-      <Navbar />
       <div className="error-container">
         <div className="error-icon">⚠️</div>
         <h3>Error Loading Data</h3>
@@ -174,8 +172,6 @@ export default function UserManagement() {
 
   return (
     <div className="user-management">
-      <Navbar />
-      
       {/* Notifications Container */}
       <div className="notifications-container">
         {notifications.map(notification => (
