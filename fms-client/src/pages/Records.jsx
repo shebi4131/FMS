@@ -676,7 +676,7 @@ const SummaryCards = () => (
       />
 
       <RecordDelete
-        record={deleteModal.record}
+        record={deleteModal.record} //test
         isOpen={deleteModal.isOpen}
         onClose={handleCloseDelete}
         onDelete={handleDeleteConfirm}
