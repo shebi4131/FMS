@@ -8,6 +8,7 @@ public class ApplicationDbContext : IdentityDbContext
 {
     public DbSet<FileDto> Files { get; set; }
     public DbSet<PasswordResetOtp> PasswordResetOtps { get; set; }
+    public DbSet<Project> Projects { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder builder)
