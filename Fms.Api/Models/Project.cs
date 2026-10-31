@@ -19,7 +19,7 @@ public class Project
 
     [Required(ErrorMessage = "Status is required")]
     [StringLength(20, ErrorMessage = "Status cannot exceed 20 characters")]
-    public string Status { get; set; } = string.Empty;
+    public string Status { get; set; } = "Active";
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }

@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Fms.Api.Controllers;
 
@@ -15,11 +16,11 @@ namespace Fms.Api.Controllers;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly UserManager<IdentityUser> _userManager;
+    private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly ApplicationDbContext _dbContext;
     private readonly IEmailService _emailService;
-    public AuthController(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, ApplicationDbContext dbContext, IEmailService emailService)
+    public AuthController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, ApplicationDbContext dbContext, IEmailService emailService)
     {
         _userManager = userManager;
         _roleManager = roleManager;
@@ -28,6 +29,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Register(RegisterDto model)
     {
         // 1. Check if user already exists
@@ -40,10 +42,11 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "Email already registered" });
 
         // 2. Create user object
-        var user = new IdentityUser
+        var user = new ApplicationUser
         {
             UserName = model.Username,
-            Email = model.Email
+            Email = model.Email,
+            FullName = model.FullName.Trim()
         };
 
         // 3. Save to database
@@ -62,7 +65,7 @@ public class AuthController : ControllerBase
         return Ok(new { message = "User registered successfully" });
     }
 
-    private string GenerateJwtToken(IdentityUser user, IList<string> roles)
+    private string GenerateJwtToken(ApplicationUser user, IList<string> roles)
     {
         var jwtSettings = HttpContext.RequestServices.GetRequiredService<IConfiguration>().GetSection("Jwt");
         var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
@@ -119,7 +122,10 @@ public class AuthController : ControllerBase
         {
             message = "Login successful",
             token = token,
-            roles = userRoles
+            roles = userRoles,
+            fullName = user.FullName,
+            username = user.UserName,
+            email = user.Email
         });
     }
 

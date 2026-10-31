@@ -2,11 +2,13 @@
 using Fms.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Fms.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class FileController : ControllerBase
 {
     private readonly IFileService _fileService;
@@ -78,9 +80,50 @@ public class FileController : ControllerBase
         return Ok(summary);
     }
 
+    [HttpGet("notifications")]
+    public async Task<IActionResult> GetNotifications([FromServices] Fms.Api.Data.ApplicationDbContext db)
+    {
+        var now = DateTime.Now;
+        var overdue = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(
+            db.Files, f => f.Status == "Out" && f.FileOutDate < now.AddDays(-1));
+        var returnedToday = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(
+            db.Files, f => f.FileInDate.HasValue && f.FileInDate.Value.Date == now.Date);
+        return Ok(new[] {
+            new { Id = $"overdue-{now:yyyyMMdd}-{overdue}", Type = "warning", Title = "Overdue custody", Message = $"{overdue} file(s) have been out for more than 24 hours.", Count = overdue },
+            new { Id = $"returns-{now:yyyyMMdd}-{returnedToday}", Type = "success", Title = "Returned today", Message = $"{returnedToday} file(s) returned today.", Count = returnedToday }
+        }.Where(x => x.Count > 0));
+    }
+
+    [HttpPost("return/{id:int}")]
+    public async Task<IActionResult> ReturnFile(int id, [FromBody] ReturnFileDto dto,
+        [FromServices] Fms.Api.Data.ApplicationDbContext db)
+    {
+        var file = await db.Files.FirstOrDefaultAsync(x => x.Id == id);
+        if (file is null) return NotFound(new { message = "Movement record was not found." });
+        if (file.Status == "In") return BadRequest(new { message = "This file has already been returned." });
+
+        file.Status = "In";
+        file.FileInDate = DateTime.Now;
+        file.ReturnRemarks = string.IsNullOrWhiteSpace(dto.Remarks) ? null : dto.Remarks.Trim();
+        file.ReturnConfirmationNo = $"RET-{DateTime.Now:yyyyMMdd}-{file.Id:D6}";
+        file.UpdatedAt = DateTime.Now;
+        file.UpdatedBy = User.Identity?.Name;
+        await db.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "File returned successfully.",
+            confirmationNumber = file.ReturnConfirmationNo,
+            returnedAt = file.FileInDate,
+            fileId = file.Id
+        });
+    }
+
     [HttpPost("send-pdf-email")]
     public async Task<IActionResult> SendPdfEmailAsync([FromBody] SendPdfEmailDto dto)
     {
+        if (string.IsNullOrWhiteSpace(dto.Recipient))
+            return BadRequest(new { message = "Recipient email is required." });
         if (string.IsNullOrWhiteSpace(dto.PdfBase64))
             return BadRequest(new { message = "PDF data is required." });
 
@@ -94,12 +137,12 @@ public class FileController : ControllerBase
         <p>Please find the attached records export generated on {DateTime.Now:dd MMM yyyy hh:mm tt}.</p>";
 
         await _emailService.SendEmailWithAttachmentAsync(
-            "shoaibahmed4131@gmail.com",
+            dto.Recipient,
             "FMS - Records Export",
             body,
             pdfBytes,
             fileName);
 
-        return Ok(new { message = "PDF sent successfully to shoaibahmed4131@gmail.com" });
+        return Ok(new { message = $"PDF sent successfully to {dto.Recipient}" });
     }
 }

@@ -26,25 +26,25 @@
   margin-bottom: 20px;
 }
 
-.form-group {
+.forget-card .form-group {
   margin-bottom: 15px;
   text-align: left;
 }
 
-.form-group label {
+.forget-card .form-group label {
   font-size: 14px;
   display: block;
   margin-bottom: 6px;
 }
 
-.form-group input {
+.forget-card .form-group input {
   width: 100%;
   padding: 10px;
   border-radius: 8px;
   border: 1px solid #ddd;
 }
 
-button {
+.forget-card button {
   width: 100%;
   padding: 10px;
   background: #16a34a;
@@ -55,7 +55,7 @@ button {
   font-weight: bold;
 }
 
-button:disabled {
+.forget-card button:disabled {
   background: #9ccc65;
   cursor: not-allowed;
 }

@@ -1,11 +1,8 @@
 import { Navigate } from 'react-router-dom';
+import { isAuthenticated } from '../lib/auth';
 
 const PublicRoute = ({ children }) => {
-  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-  const token = localStorage.getItem('token');
-  
-  // If user is already logged in, redirect to records page
-  if (isLoggedIn && token) {
+  if (isAuthenticated()) {
     return <Navigate to="/records" replace />;
   }
   

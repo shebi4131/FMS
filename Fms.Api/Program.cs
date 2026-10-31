@@ -1,4 +1,5 @@
 using Fms.Api.Data;
+using Fms.Api.Models;
 using Fms.Api.Repositories;
 using Fms.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -12,14 +13,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 // 1. Add DbContext 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+        .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
 
 // Register Repository
 builder.Services.AddScoped<IFileRepository, FileRepository>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 // 2. Add Identity
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()  
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
@@ -65,6 +67,7 @@ builder.Services.AddCors(options =>
 
 // 5. Add Controllers
 builder.Services.AddControllers();
+builder.Services.AddAuthorization();
 
 // 6. Add Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -99,6 +102,14 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+app.UseExceptionHandler(errorApp => errorApp.Run(async context =>
+{
+    var error = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error;
+    context.Response.StatusCode = error is ArgumentException or InvalidOperationException ? 400 : 500;
+    context.Response.ContentType = "application/json";
+    await context.Response.WriteAsJsonAsync(new { message = error?.Message ?? "An unexpected server error occurred." });
+}));
+
 
     app.UseSwagger();
     app.UseSwaggerUI();
@@ -106,13 +117,14 @@ var app = builder.Build();
 
 //app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
-app.MapGet("/", () => Results.Redirect("/swagger/index.html"));
+app.MapFallbackToFile("index.html");
 
 using var scope = app.Services.CreateScope();
 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

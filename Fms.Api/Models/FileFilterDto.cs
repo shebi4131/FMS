@@ -5,12 +5,17 @@
         public string? PlotNo { get; set; }
         public string? StNo { get; set; }
         public string? Phase { get; set; }
+        public string? Project { get; set; }
+        public string? Size { get; set; }
+        public string? MovementType { get; set; }
         public string? From { get; set; }
         public string? Carrier { get; set; }
         public string? To { get; set; }
         public string? Purpose { get; set; }
         public DateTime? FileOutDate { get; set; }  
         public DateTime? FileInDate { get; set; }
+        public DateTime? DateFrom { get; set; }
+        public DateTime? DateTo { get; set; }
     public string? Status { get; set; }
         public string? Remarks { get; set; }
 

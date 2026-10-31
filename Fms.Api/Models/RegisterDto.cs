@@ -5,6 +5,8 @@ namespace Fms.Api.Models;
 public class RegisterDto
 {
     [Required]
+    public string FullName { get; set; } = string.Empty;
+    [Required]
     public string Username { get; set; }
 
     [Required]

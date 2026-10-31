@@ -6,10 +6,12 @@ namespace Fms.Api.Services;
 public class FileService : IFileService
 {
     private readonly IFileRepository _files;
+    private readonly Fms.Api.Data.ApplicationDbContext _context;
 
-    public FileService(IFileRepository files)
+    public FileService(IFileRepository files, Fms.Api.Data.ApplicationDbContext context)
     {
         _files = files;
+        _context = context;
     }
 
     public async Task<FileDto> CreateFileAsync(FileDto fileDto)
@@ -17,17 +19,24 @@ public class FileService : IFileService
         fileDto.CreatedAt = DateTime.Now;
         fileDto.UpdatedAt = null;
         fileDto.FileInDate = null;
+        fileDto.Project = string.IsNullOrWhiteSpace(fileDto.Project) ? fileDto.Phase : fileDto.Project.Trim();
+        fileDto.Phase = fileDto.Project;
+        fileDto.MovementType = fileDto.MovementType == "Extended" ? "Extended" : "Daily";
+        fileDto.Status = "Out";
 
         if (fileDto.FileOutDate == default)
             fileDto.FileOutDate = DateTime.Now;
-
-        if (string.IsNullOrEmpty(fileDto.Status))
-            fileDto.Status = "In"; 
 
         if (fileDto.FileOutDate > DateTime.Now)
         {
             throw new ArgumentException("File out date cannot be in the future.");
         }
+
+        var hasActiveCheckout = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.AnyAsync(
+            _context.Files,
+            f => f.Project == fileDto.Project && f.StNo == fileDto.StNo && f.PlotNo == fileDto.PlotNo && f.Status == "Out");
+        if (hasActiveCheckout)
+            throw new InvalidOperationException("This file is already out. Return it before creating another checkout.");
 
         return await _files.CreateFileAsync(fileDto);
     }
@@ -68,6 +77,9 @@ public class FileService : IFileService
         existingFile.PlotNo = fileDto.PlotNo;
         existingFile.StNo = fileDto.StNo;
         existingFile.Phase = fileDto.Phase;
+        existingFile.Project = string.IsNullOrWhiteSpace(fileDto.Project) ? fileDto.Phase : fileDto.Project;
+        existingFile.Size = fileDto.Size;
+        existingFile.MovementType = fileDto.MovementType;
         existingFile.From = fileDto.From;
         existingFile.Carrier = fileDto.Carrier;
         existingFile.To = fileDto.To;

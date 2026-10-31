@@ -42,6 +42,9 @@ public class FileRepository : IFileRepository
         existingFile.PlotNo = fileDto.PlotNo;
         existingFile.StNo = fileDto.StNo;
         existingFile.Phase = fileDto.Phase;
+        existingFile.Project = fileDto.Project;
+        existingFile.Size = fileDto.Size;
+        existingFile.MovementType = fileDto.MovementType;
         existingFile.From = fileDto.From;
         existingFile.Carrier = fileDto.Carrier;
         existingFile.To = fileDto.To;
@@ -50,6 +53,8 @@ public class FileRepository : IFileRepository
         existingFile.FileInDate = fileDto.FileInDate;
         existingFile.Status = fileDto.Status;
         existingFile.Remarks = fileDto.Remarks;
+        existingFile.ReturnRemarks = fileDto.ReturnRemarks;
+        existingFile.ReturnConfirmationNo = fileDto.ReturnConfirmationNo;
         existingFile.CreatedAt = originalCreatedAt;
         existingFile.UpdatedAt = DateTime.Now;
         existingFile.UpdatedBy = fileDto.UpdatedBy;
@@ -82,6 +87,12 @@ public class FileRepository : IFileRepository
             query = query.Where(f => f.StNo.Contains(filterDto.StNo));
         if (!string.IsNullOrWhiteSpace(filterDto.Phase))
             query = query.Where(f => f.Phase.Contains(filterDto.Phase));
+        if (!string.IsNullOrWhiteSpace(filterDto.Project))
+            query = query.Where(f => f.Project.Contains(filterDto.Project));
+        if (!string.IsNullOrWhiteSpace(filterDto.Size))
+            query = query.Where(f => f.Size.Contains(filterDto.Size));
+        if (!string.IsNullOrWhiteSpace(filterDto.MovementType))
+            query = query.Where(f => f.MovementType == filterDto.MovementType);
         if (!string.IsNullOrWhiteSpace(filterDto.From))
             query = query.Where(f => f.From.Contains(filterDto.From));
         if (!string.IsNullOrWhiteSpace(filterDto.Carrier))
@@ -94,6 +105,10 @@ public class FileRepository : IFileRepository
             query = query.Where(f => f.FileOutDate.Date == filterDto.FileOutDate.Value.Date);
         if (filterDto.FileInDate.HasValue)
             query = query.Where(f => f.FileInDate.HasValue && f.FileInDate.Value.Date == filterDto.FileInDate.Value.Date);
+        if (filterDto.DateFrom.HasValue)
+            query = query.Where(f => f.FileOutDate >= filterDto.DateFrom.Value.Date);
+        if (filterDto.DateTo.HasValue)
+            query = query.Where(f => f.FileOutDate < filterDto.DateTo.Value.Date.AddDays(1));
         if (!string.IsNullOrWhiteSpace(filterDto.Status))
             query = query.Where(f => f.Status.Contains(filterDto.Status));
         if (!string.IsNullOrWhiteSpace(filterDto.Remarks))

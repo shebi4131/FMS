@@ -17,15 +17,23 @@ public class FileDto
     [StringLength(20, ErrorMessage = "Street number cannot exceed 20 characters")]
     public string StNo { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Phase is required")]
+    [Required(ErrorMessage = "Project is required")]
     [StringLength(20, ErrorMessage = "Phase cannot exceed 20 characters")]
     public string Phase { get; set; } = string.Empty;
+
+    [StringLength(100)]
+    public string Project { get; set; } = string.Empty;
+
+    [StringLength(50)]
+    public string Size { get; set; } = string.Empty;
+
+    [StringLength(20)]
+    public string MovementType { get; set; } = "Daily";
 
     [Required(ErrorMessage = "From field is required")]
     [StringLength(100, ErrorMessage = "From field cannot exceed 100 characters")]
     public string From { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Carrier is required")]
     [StringLength(100, ErrorMessage = "Carrier cannot exceed 100 characters")]
     public string Carrier { get; set; } = string.Empty;
 
@@ -49,6 +57,12 @@ public class FileDto
 
     [StringLength(500, ErrorMessage = "Remarks cannot exceed 500 characters")]
     public string? Remarks { get; set; }
+
+    [StringLength(500, ErrorMessage = "Return remarks cannot exceed 500 characters")]
+    public string? ReturnRemarks { get; set; }
+
+    [StringLength(40)]
+    public string? ReturnConfirmationNo { get; set; }
 
     // Audit fields
     public DateTime CreatedAt { get; set; } = DateTime.Now;

@@ -1,108 +1,11 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { FiArrowRight, FiEye, FiEyeOff, FiLock, FiMail } from "react-icons/fi";
 import { api } from "../lib/api";
-import "./Login.css";
 
 export default function Login() {
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    // Clear error when user starts typing
-    if (error) setError("");
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    try {
-      // Use your imported api to make the login request
-      const response = await api.post("/auth/login", form);
-
-      const data = response.data || response;
-
-      // Check if login was successful - your backend returns 200 with message
-      if (response.status === 200 && data.message === "Login successful") {
-        // Store token, roles, and user info
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("userRoles", JSON.stringify(data.roles));
-        localStorage.setItem("userEmail", form.email);
-        localStorage.setItem("isLoggedIn", "true");
-        
-        // Redirect to records page on successful login
-        navigate("/records");
-      } else {
-        setError(data.message || "Login failed. Please try again.");
-      }
-    } catch (err) {
-      console.error("Login error:", err); // Debug log
-      
-      if (err.response) {
-        // Server responded with error status (401, 400, etc.)
-        const errorMessage = err.response.data?.message || 
-                            err.response.data?.error || 
-                            "Invalid email or password.";
-        setError(errorMessage);
-      } else if (err.request) {
-        // Network error
-        setError("Network error. Please check your connection.");
-      } else {
-        // Other error
-        setError("An unexpected error occurred. Please try again.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="login-container">
-      <form className="login-form" onSubmit={handleSubmit}>
-        <h2>File Management System</h2>
-
-        {error && <div className="error-message">{error}</div>}
-
-        <div className="form-group">
-          <label>Email</label>
-          <input
-            name="email"
-            type="email"
-            placeholder="Enter your email"
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Password</label>
-          <input
-            name="password"
-            type="password"
-            placeholder="Enter your password"
-            value={form.password}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <button type="submit" disabled={loading}>
-          {loading ? "Logging in..." : "Login"}
-        </button>
-
-        <p className="signup-link">
-          New user? <Link to="/signup">Sign up</Link>
-        </p>
-
-        <p className="forgot-link">
-          <Link to="/forgetpass">Forgot Password?</Link>
-        </p>
-      </form>
-    </div>
-  );
+  const [form, setForm] = useState({ email:"", password:"" }), [show, setShow] = useState(false), [loading, setLoading] = useState(false), [error, setError] = useState(""); const navigate = useNavigate(); const [params] = useSearchParams();
+  const submit = async e => { e.preventDefault(); setLoading(true); setError(""); try { const {data} = await api.post("/auth/login", form); localStorage.setItem("token", data.token); localStorage.setItem("userRoles", JSON.stringify(data.roles)); localStorage.setItem("userEmail", data.email||form.email); localStorage.setItem("fullName", data.fullName||data.username||form.email.split("@")[0]); localStorage.setItem("username", data.username||""); localStorage.setItem("isLoggedIn", "true"); navigate("/dashboard"); } catch(err) { setError(err.response?.data?.message || "Unable to sign in. Check your details."); } finally { setLoading(false); } };
+  const sessionExpired=params.get("reason")==="session-expired";
+  return <div className="auth-page"><section className="auth-story"><div className="story-brand"><div className="brand-mark light">F</div><span>File Registry</span></div><div className="story-copy"><span className="eyebrow light-text">RECORDS, IN ORDER</span><h1>Every file.<br/>Every movement.<br/><em>Accounted for.</em></h1><p>A secure workspace for daily circulation, extended custody, and the complete record room ledger.</p></div><div className="story-foot">Internal Records Management System</div></section><section className="auth-form-wrap"><form className="auth-card" onSubmit={submit}><div className="mobile-auth-brand"><div className="brand-mark">F</div><strong>File Registry</strong></div><span className="eyebrow">SECURE ACCESS</span><h2>Welcome back</h2><p className="subtext">Sign in with your assigned account to continue.</p>{(error||sessionExpired) && <div className="form-alert">{error||"Your session expired. Please sign in again to continue."}</div>}<label>Email address<div className="input-icon"><FiMail/><input type="email" value={form.email} onChange={e => setForm({...form,email:e.target.value})} placeholder="name@organization.com" required/></div></label><label>Password<div className="input-icon"><FiLock/><input type={show?"text":"password"} value={form.password} onChange={e => setForm({...form,password:e.target.value})} placeholder="Enter your password" required/><button type="button" onClick={() => setShow(v=>!v)}>{show?<FiEyeOff/>:<FiEye/>}</button></div></label><div className="login-meta"><span>Accounts are created by administrators</span><Link to="/forgetpass">Forgot password?</Link></div><button className="primary-btn login-btn" disabled={loading}>{loading ? <span className="button-loader"/> : <>Sign in <FiArrowRight/></>}</button><small>Protected access · Activity is auditable</small></form></section></div>;
 }

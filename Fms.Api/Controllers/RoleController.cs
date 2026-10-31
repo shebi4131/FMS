@@ -8,13 +8,13 @@ namespace Fms.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-//[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin")]
 public class RoleController : ControllerBase
 {
-    private readonly UserManager<IdentityUser> _userManager;
+    private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
 
-    public RoleController(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager)
+    public RoleController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
     {
         _userManager = userManager;
         _roleManager = roleManager;
@@ -34,6 +34,7 @@ public class RoleController : ControllerBase
                 Id = user.Id,
                 Username = user.UserName,
                 Email = user.Email,
+                FullName = user.FullName,
                 Roles = roles
             });
         }

@@ -1,57 +1,11 @@
-import React, { useEffect, useState } from "react";
-import "./Profile.css";
+import { useEffect, useState } from "react";
+import { FiCheck, FiEye, FiEyeOff, FiLock, FiMail, FiSave, FiUser } from "react-icons/fi";
+import { api } from "../lib/api";
 
-export default function Profile() {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    // Later replace with API call
-    const fetchUser = async () => {
-      // Simulate API response
-      const mockUser = {
-        username: "Shoaib",
-        email: "shoaib@example.com",
-        password: "********", // don’t show real password
-      };
-      setUser(mockUser);
-    };
-
-    fetchUser();
-  }, []);
-
-  if (!user) {
-    return <div className="profile-loading">Loading...</div>;
-  }
-
-  return (
-    <div className="profile-container">
-      <div className="profile-card">
-        <div className="profile-header">
-          <img
-            src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-            alt="avatar"
-            className="profile-avatar"
-          />
-          <h2>{user.username}</h2>
-          <p className="profile-email">{user.email}</p>
-        </div>
-
-        <div className="profile-details">
-          <h3>Account Details</h3>
-          <div className="detail-row">
-            <span className="detail-label">Username:</span>
-            <span className="detail-value">{user.username}</span>
-          </div>
-          <div className="detail-row">
-            <span className="detail-label">Email:</span>
-            <span className="detail-value">{user.email}</span>
-          </div>
-          <div className="detail-row">
-            <span className="detail-label">Password:</span>
-            <span className="detail-value">{user.password}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+export default function Profile(){
+ const [profile,setProfile]=useState({fullName:"",username:"",email:""}),[password,setPassword]=useState({currentPassword:"",newPassword:""}),[show,setShow]=useState({current:false,next:false}),[toast,setToast]=useState("");
+ useEffect(()=>{api.get("/profile").then(r=>setProfile(r.data))},[]);const notify=m=>{setToast(m);setTimeout(()=>setToast(""),3000)};
+ const saveProfile=async e=>{e.preventDefault();try{const {data}=await api.put("/profile",profile);setProfile(data);localStorage.setItem("fullName",data.fullName);localStorage.setItem("username",data.username);localStorage.setItem("userEmail",data.email);notify("Profile updated successfully.")}catch(err){notify(err.response?.data?.message||"Could not update profile.")}};
+ const savePassword=async e=>{e.preventDefault();try{const {data}=await api.post("/profile/change-password",password);setPassword({currentPassword:"",newPassword:""});notify(data.message)}catch(err){notify(err.response?.data?.message||"Could not change password.")}};
+ return <><div className="page-heading compact"><div><span className="eyebrow">MY ACCOUNT</span><h2>Profile</h2><p>Keep your personal details and password up to date.</p></div></div><div className="profile-grid"><form className="panel profile-card" onSubmit={saveProfile}><div className="panel-head"><div><span className="eyebrow">PERSONAL DETAILS</span><h3>Account information</h3></div><div className="profile-avatar"><FiUser/></div></div><div className="profile-form"><label>Full name<div className="field-icon"><FiUser/><input value={profile.fullName||""} onChange={e=>setProfile({...profile,fullName:e.target.value})} required/></div></label><label>Username<div className="field-icon"><FiUser/><input value={profile.username||""} onChange={e=>setProfile({...profile,username:e.target.value})} required/></div></label><label>Email address<div className="field-icon"><FiMail/><input type="email" value={profile.email||""} onChange={e=>setProfile({...profile,email:e.target.value})} required/></div></label></div><div className="profile-actions"><button className="primary-btn"><FiSave/> Save profile</button></div></form><form className="panel profile-card" onSubmit={savePassword}><div className="panel-head"><div><span className="eyebrow">SECURITY</span><h3>Change password</h3></div><div className="profile-avatar lock"><FiLock/></div></div><div className="profile-form"><label>Current password<div className="field-icon"><FiLock/><input type={show.current?"text":"password"} value={password.currentPassword} onChange={e=>setPassword({...password,currentPassword:e.target.value})} required/><button type="button" onClick={()=>setShow({...show,current:!show.current})}>{show.current?<FiEyeOff/>:<FiEye/>}</button></div></label><label>New password<div className="field-icon"><FiLock/><input type={show.next?"text":"password"} minLength="8" value={password.newPassword} onChange={e=>setPassword({...password,newPassword:e.target.value})} required/><button type="button" onClick={()=>setShow({...show,next:!show.next})}>{show.next?<FiEyeOff/>:<FiEye/>}</button></div><small>Use at least 8 characters.</small></label></div><div className="profile-actions"><button className="primary-btn"><FiLock/> Update password</button></div></form></div>{toast&&<div className="toast"><FiCheck/>{toast}</div>}</>;
 }
